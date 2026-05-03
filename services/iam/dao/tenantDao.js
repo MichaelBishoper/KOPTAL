@@ -23,7 +23,7 @@ async function getTenantById(id) {
     const result = await client.query(
         `SELECT * FROM tenants WHERE tenant_id = $1`, [id]
     );
-    return result.rows[0]
+    return result.rows[0];
 }
 
 async function getTenantByEmail(email) {
@@ -82,5 +82,5 @@ module.exports = {
     updatePassword,
     updateVerfied,
     deleteTenant
-}
+};
 

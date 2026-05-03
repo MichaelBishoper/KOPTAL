@@ -1,23 +1,6 @@
-# Bestpal
-## Next.js Dev Setup
-```
-git clone https://github.com/MichaelBishoper/Bestpal.git
-cd bestpal
-```
-
-```
-cd bestpal-calendar
-```
-
-```
-npm install
-```
-
-```
-npm run dev
-```
-
-# fileUpload
+# KOPTAL
+# Backend Services:
+## fileUpload
 inside `/services/fileUpload`, create a `.env` file:
 ```
 PORT=3000
@@ -30,13 +13,13 @@ DB_PORT=5432
 BASE_URL=http://localhost:3000
 ```
 
-## Running service locally
+### Running service locally
 ```
 npm install
 npm run dev
 ```
 
-## Running service on Docker
+### Running service on Docker
 build image
 ```
 docker build -t fileupload-service .
@@ -46,13 +29,13 @@ run the container
 docker run -p 3000:3000 --env-file .env fileupload-service
 ```
 
-## API endpoints
-### Health check
+### API endpoints
+#### Health check
 ```
 GET /health
 ```
 
-### Upload file
+#### Upload file
 ```
 POST /upload
 ```
@@ -64,14 +47,14 @@ Body (form-data):
 | entity_type | Text | Type of entity (e.g. product, user) |
 | entity_id   | Text | ID of the entity |
 
-#### Example
+##### Example
 | Key          | Type | Value |
 |-------------|------|------|
 | file        | File | image.png |
 | entity_type | Text | product |
 | entity_id   | Text | 1 |
 
-#### Sample Response
+##### Sample Response
 ```json
 {
     "file_id": 6,
@@ -86,11 +69,11 @@ Body (form-data):
 }
 ```
 
-### Get file
+#### Get file
 ```
 GET /files/:fileid
 ```
-#### Example 
+##### Example 
 ```
 http://localhost:3000/files/6
 ```
@@ -110,8 +93,10 @@ CREATE TABLE uploaded_files (
 );
 ```
 
-## Notes
+### Notes
 
 This service currently does NOT validate entity existence. Responsibility is delegated to other microservices.
 
 Files are stored in /app/src/uploads/
+
+## IAM
