@@ -100,3 +100,79 @@ This service currently does NOT validate entity existence. Responsibility is del
 Files are stored in /app/src/uploads/
 
 ## IAM
+
+## monolith
+
+inside `/services/monolith`, create a `.env` file with these values (example):
+```
+PORT=4000
+PG_HOST=localhost
+PG_PORT=5432
+PG_USER=postgres
+PG_PASSWORD=password123
+PG_DATABASE=koptal
+JWT_SECRET=some_test_secret
+```
+
+### Running service locally
+```
+cd services/monolith
+npm install
+node index.js
+```
+
+### API endpoints
+#### Health check
+```
+GET /health
+```
+
+#### Units
+```
+GET /api/units
+GET /api/units/:id
+POST /api/units         # protected (Authorization: Bearer <token>)
+PUT /api/units/:id      # protected
+DELETE /api/units/:id   # protected
+```
+
+POST/PUT body (JSON sample):
+```json
+{
+    "unit_name": "kilogram",
+    "unit_symbol": "kg",
+    "unit_type": "weight"
+}
+```
+
+#### Tenant Products
+```
+GET /api/products
+GET /api/products/:id
+POST /api/products      # protected (Authorization: Bearer <token>)
+PUT /api/products/:id   # protected
+DELETE /api/products/:id# protected
+```
+
+POST/PUT body (JSON sample):
+```json
+{
+    "tenant_id": 1,
+    "name": "Organic Spinach",
+    "quantity": 1200,
+    "unit_id": 1,
+    "price": 0.95
+}
+```
+
+Token generation examples (PowerShell, run from `services/monolith`):
+```
+node -e "require('dotenv').config(); const jwt=require('jsonwebtoken'); console.log(jwt.sign({ tenant_id: 1 }, process.env.JWT_SECRET));"
+
+node -e "require('dotenv').config(); const jwt=require('jsonwebtoken'); console.log(jwt.sign({ manager_id: 10, role: 'admin' }, process.env.JWT_SECRET));"
+```
+
+Notes about auth and tenant scoping:
+- The service uses JWT tokens verified with `JWT_SECRET` from the `.env`.
+- For tenant-scoped operations (product create/update/delete) include `tenant_id` in the token payload (e.g. `{ "tenant_id": 1 }`). If the token contains `tenant_id`, the controller enforces that the token's tenant matches the product's tenant. On create, if request body omits `tenant_id` it will be set from the token.
+- Admin tokens may omit `tenant_id` and include `role: 'admin'` to perform actions across tenants. You can also include an identity claim like `manager_id` for auditing.
