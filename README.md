@@ -176,3 +176,4 @@ Notes about auth and tenant scoping:
 - The service uses JWT tokens verified with `JWT_SECRET` from the `.env`.
 - For tenant-scoped operations (product create/update/delete) include `tenant_id` in the token payload (e.g. `{ "tenant_id": 1 }`). If the token contains `tenant_id`, the controller enforces that the token's tenant matches the product's tenant. On create, if request body omits `tenant_id` it will be set from the token.
 - Admin tokens may omit `tenant_id` and include `role: 'admin'` to perform actions across tenants. You can also include an identity claim like `manager_id` for auditing.
+
