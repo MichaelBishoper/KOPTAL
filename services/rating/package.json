@@ -1,0 +1,16 @@
+{
+  "name": "rating-service",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js"
+  },
+  "type": "commonjs",
+  "dependencies": {
+    "amqplib": "^0.10.7",
+    "dotenv": "^17.4.2",
+    "express": "^4.19.2",
+    "pg": "^8.11.5"
+  }
+}

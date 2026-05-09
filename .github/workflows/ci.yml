@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  push:
+    branches: [main, structure]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service:
+          - iam
+          - category
+          - inventory
+          - procurement
+          - logistics
+          - rating
+          - fileUpload
+    defaults:
+      run:
+        working-directory: services/${{ matrix.service }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci
+      - run: npm test --if-present
+
+  build-images:
+    runs-on: ubuntu-latest
+    needs: lint-and-test
+    strategy:
+      matrix:
+        include:
+          - service: iam
+            context: services/iam
+          - service: category
+            context: services/category
+          - service: inventory
+            context: services/inventory
+          - service: procurement
+            context: services/procurement
+          - service: logistics
+            context: services/logistics
+          - service: rating
+            context: services/rating
+          - service: fileupload
+            context: services/fileUpload
+          - service: api-gateway
+            context: apps/api-gateway
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t koptal-${{ matrix.service }}:${{ github.sha }} ${{ matrix.context }}
+
+  compose-check:
+    runs-on: ubuntu-latest
+    needs: lint-and-test
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker compose -f infrastructure/docker/docker-compose.yml config --quiet

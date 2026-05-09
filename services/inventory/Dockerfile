@@ -7,8 +7,6 @@ RUN npm install
 
 COPY . .
 
-RUN mkdir -p /app/src/uploads
+EXPOSE 3003
 
-EXPOSE 3007
-
-CMD ["node", "src/index.js"]
+CMD ["node", "index.js"]
