@@ -2,112 +2,82 @@
 
 import Image from "next/image";
 import Link from "next/link";
-
-interface Product {
-  id: string;
-  name: string;
-  image: string;
-  tenantName: string;
-  location: string;
-  price?: number;
-}
+import { formatCurrency, getTenantProducts, toCatalogCard, filterProductsBySearch, type TenantProductCard } from "@/lib";
 
 interface CatalogProps {
-  products?: Product[];
+  products?: TenantProductCard[];
+  columns?: 4 | 5;
+  searchQuery?: string;
 }
 
-export default function Catalog({ products = [] }: CatalogProps) {
-  // Mock data if no products provided
-  const mockProducts: Product[] = [
-    {
-      id: "1",
-      name: "Fresh Tomatoes",
-      image: "/product-placeholder.jpg",
-      tenantName: "Green Farm Co.",
-      location: "Jakarta, West",
-    },
-    {
-      id: "2",
-      name: "Organic Spinach",
-      image: "/product-placeholder.jpg",
-      tenantName: "Organic Harvest",
-      location: "Bogor, West Java",
-    },
-    {
-      id: "3",
-      name: "Fresh Cabbage",
-      image: "/product-placeholder.jpg",
-      tenantName: "Local Market",
-      location: "Tangerang, Banten",
-    },
-    {
-      id: "4",
-      name: "Carrots Bundle",
-      image: "/product-placeholder.jpg",
-      tenantName: "Farmer's Pride",
-      location: "Cikarang, West Java",
-    },
-    {
-      id: "5",
-      name: "Bell Peppers",
-      image: "/product-placeholder.jpg",
-      tenantName: "Fresh Supply",
-      location: "Depok, West Java",
-    },
-    {
-      id: "6",
-      name: "Potatoes",
-      image: "/product-placeholder.jpg",
-      tenantName: "Green Farm Co.",
-      location: "Jakarta, West",
-    },
-    {
-      id: "7",
-      name: "Onions",
-      image: "/product-placeholder.jpg",
-      tenantName: "Organic Harvest",
-      location: "Bogor, West Java",
-    },
-    {
-      id: "8",
-      name: "Lettuce",
-      image: "/product-placeholder.jpg",
-      tenantName: "Local Market",
-      location: "Tangerang, Banten",
-    },
-  ];
+export default function Catalog({ products = [], columns = 4, searchQuery = "" }: CatalogProps) {
+  // Use provided products or fetch all products
+  let baseProducts = products.length > 0 ? products : getTenantProducts().map(toCatalogCard);
+  
+  // Apply search filter if query is provided
+  if (searchQuery.trim()) {
+    const filteredRows = filterProductsBySearch(searchQuery);
+    baseProducts = filteredRows.map(toCatalogCard);
+  }
 
-  const displayProducts = products.length > 0 ? products : mockProducts;
+  const displayProducts = baseProducts;
 
   return (
-    <div className="w-full">
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 px-6 py-8">
+    <div className="w-full py-8">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div
+          className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 ${
+            columns === 5 ? "lg:grid-cols-5" : "lg:grid-cols-4"
+          }`}
+        >
         {displayProducts.map((product) => (
-          <Link key={product.id} href={`/customer/product/${product.id}`}>
-            <div className="border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow cursor-pointer bg-white h-full">
-              {/* Product Image */}
+          <div
+            key={product.id}
+            className="border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow bg-white h-full"
+          >
+            <Link href={`/customer/product/${product.id}`} className="block cursor-pointer">
               <div className="relative w-full aspect-square bg-gray-100">
-                <Image
-                  src={product.image}
-                  alt={product.name}
-                  fill
-                  className="object-cover"
-                />
+                {product.image !== "/product-placeholder.jpg" && (
+                  <Image
+                    src={product.image}
+                    alt={product.name}
+                    fill
+                    className="object-cover"
+                  />
+                )}
               </div>
 
-              {/* Product Info */}
-              <div className="p-4">
+              <div className="p-4 pb-3">
                 <h3 className="text-sm font-semibold text-gray-800 line-clamp-2 mb-2">
                   {product.name}
                 </h3>
-                <p className="text-xs text-gray-600 mb-1">{product.tenantName}</p>
-                <p className="text-xs text-gray-500 flex items-center gap-1">
-                  📍 {product.location}
+                <p className="text-sm font-bold text-gray-900">Rp{formatCurrency(product.price)}</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  Stock {product.quantity} {product.unitLabel}
                 </p>
               </div>
+            </Link>
+
+            <div className="px-4 pb-4">
+              <Link
+                href={{
+                  pathname: "/customer/tennant",
+                  query: {
+                    name: product.tenantName,
+                    location: product.location,
+                  },
+                }}
+                className="text-xs font-semibold text-teal-700 hover:text-teal-800 hover:underline"
+              >
+                {product.tenantName}
+              </Link>
+              <p className="text-xs text-gray-500 flex items-center gap-1 mt-1">
+                📍 {product.location}
+              </p>
             </div>
-          </Link>
+          </div>
         ))}
+        </div>
       </div>
     </div>
   );

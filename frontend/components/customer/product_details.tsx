@@ -2,38 +2,34 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import ProductCartBox from "@/components/customer/product_cart_box";
+import { formatCurrency, getUnitLabel, toProductDetails, type TenantProductDetails } from "@/lib";
 
 interface ProductDetailsProps {
-  product: {
-    id: string;
-    name: string;
-    price: number;
-    unitType: "grams" | "pieces";
-    tenantName: string;
-    location: string;
-    images: string[];
-    description: string;
-    availability: number;
-  };
+  product: TenantProductDetails;
 }
 
 export default function ProductDetails({ product }: ProductDetailsProps) {
   const [activeTab, setActiveTab] = useState<"description" | "review">("description");
   const [selectedImage, setSelectedImage] = useState(0);
-
-  const pricePerUnit = product.unitType === "grams" ? (product.price / 100).toFixed(0) : product.price;
+  const details = toProductDetails(product);
+  const images = details.images ?? [details.image ?? "/product-placeholder.jpg"];
+  const unitPrice = product.price;
+  const resolvedDescription = details.description ?? "No description has been added for this product yet.";
+  const unitLabel = getUnitLabel(product.unit_id) === "Gram" ? "gram" : "piece";
+  const categoryLabel = details.category?.trim() || "Uncategorized";
 
   return (
-    <div className="max-w-7xl mx-auto px-8 py-8">
+    <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.1fr_320px] gap-8 items-start">
         {/* Left Side - Images Only */}
         <div className="flex flex-col gap-4">
           {/* Main Image */}
           <div className="relative w-full aspect-square bg-gray-100 rounded-lg overflow-hidden border border-gray-300">
             <Image
-              src={product.images[selectedImage]}
-              alt={`${product.name} - Image ${selectedImage + 1}`}
+              src={images[selectedImage]}
+              alt={`${details.name} - Image ${selectedImage + 1}`}
               fill
               className="object-cover"
               priority
@@ -41,9 +37,9 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
           </div>
 
           {/* Thumbnail Images */}
-          {product.images.length > 1 && (
+          {images.length > 1 && (
             <div className="flex gap-3">
-              {product.images.map((image, index) => (
+              {images.map((image, index) => (
                 <button
                   key={index}
                   onClick={() => setSelectedImage(index)}
@@ -64,11 +60,16 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
         <div className="flex flex-col gap-8">
           {/* Product Name and Price */}
           <div>
-            <h1 className="text-4xl font-bold text-gray-800 mb-4">{product.name}</h1>
+            <h1 className="text-4xl font-bold text-gray-800 mb-4">{details.name}</h1>
             <div className="flex items-baseline gap-2">
-              <span className="text-5xl font-bold text-gray-800">Rp {pricePerUnit}</span>
+              <span className="text-5xl font-bold text-gray-800">Rp{formatCurrency(unitPrice)}</span>
               <span className="text-lg text-gray-600">
-                per {product.unitType === "grams" ? "100g" : "piece"}
+                per {unitLabel}
+              </span>
+            </div>
+            <div className="mb-3 mt-4">
+              <span className="inline-flex items-center rounded-full border border-[#01A49E]/20 bg-[#01A49E]/10 px-3 py-1 text-xs font-semibold text-[#057f7b]">
+                Category: {categoryLabel}
               </span>
             </div>
           </div>
@@ -102,7 +103,7 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
           {/* Tab Content */}
           <div>
             {activeTab === "description" && (
-              <p className="text-gray-700 leading-relaxed text-base">{product.description}</p>
+              <p className="text-gray-700 leading-relaxed text-base">{resolvedDescription}</p>
             )}
 
             {activeTab === "review" && (
@@ -118,16 +119,36 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
           <div>
             <div className="flex gap-4 items-start">
               {/* Tenant Logo Placeholder */}
-              <div className="w-16 h-16 bg-gray-200 border-2 border-gray-400 rounded-lg flex items-center justify-center flex-shrink-0">
+              <Link
+                href={{
+                  pathname: "/customer/tennant",
+                  query: {
+                    name: details.tenantName,
+                    location: details.location,
+                  },
+                }}
+                className="w-16 h-16 bg-gray-200 border-2 border-gray-400 rounded-lg flex items-center justify-center flex-shrink-0 hover:border-teal-600 transition-colors"
+              >
                 <span className="text-xs font-semibold text-gray-600 text-center">Logo</span>
-              </div>
+              </Link>
 
               {/* Tenant Details */}
               <div className="flex-1">
                 <p className="text-sm text-gray-600">by</p>
-                <p className="text-lg font-semibold text-gray-800">{product.tenantName}</p>
+                <Link
+                  href={{
+                    pathname: "/customer/tennant",
+                    query: {
+                      name: product.tenantName,
+                      location: product.location,
+                    },
+                  }}
+                  className="text-lg font-semibold text-teal-700 hover:text-teal-800 hover:underline"
+                >
+                  {details.tenantName}
+                </Link>
                 <p className="text-sm text-gray-600 flex items-center gap-1 mt-1">
-                  📍 {product.location}
+                  📍 {details.location ?? "West Java"}
                 </p>
               </div>
             </div>
@@ -135,7 +156,13 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
         </div>
 
         {/* Right Side - Cart Box */}
-        <ProductCartBox product={product} />
+        <ProductCartBox
+          product={{
+            ...details,
+            image: images[0],
+            location: details.location,
+          }}
+        />
       </div>
     </div>
   );

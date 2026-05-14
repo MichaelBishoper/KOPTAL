@@ -2,18 +2,17 @@
 
 import { useState, useRef, useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { MagnifyingGlassIcon } from "@heroicons/react/24/solid";
 import Link from "next/link";
 import Image from "next/image";
-
-type Role = "guest" | "customer" | "admin" | "tennant" | "system";
+import SearchBar from "./SearchBar";
+import { readAuthSessionFromCookies, type AppRole } from "@/lib";
 
 export default function Navbar() {
   const pathname = usePathname();
   const [pagesOpen, setPagesOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
-  const [role, setRole] = useState<Role>("guest");
+  const [role, setRole] = useState<AppRole>("guest");
   const pagesRef = useRef<HTMLDivElement | null>(null);
   const contactRef = useRef<HTMLDivElement | null>(null);
 
@@ -25,23 +24,33 @@ export default function Navbar() {
         { label: "Admin Dashboard", href: "/admin/a_dashboard" },
       ];
     }
+
     if (role === "tennant") {
       return [
         { label: "T Dashboard", href: "/tennant/t_dashboard" },
         { label: "Add Product", href: "/tennant/product_add" },
-        { label: "Transaction", href: "/tennant/t_transaction" },
+        { label: "Transaction & Orders", href: "/tennant/t_transaction" },
       ];
     }
+
+    if (role === "customer") {
+      return [
+        { label: "Marketplace", href: "/customer/marketplace" },
+        { label: "Basket", href: "/customer/basket" },
+        { label: "Transaction", href: "/customer/c_transaction" },
+      ];
+    }
+
     return [
       { label: "Marketplace", href: "/customer/marketplace" },
-      { label: "Basket", href: "/customer/basket" },
-      { label: "Transaction", href: "/customer/c_transaction" },
     ];
   }
 
   const isPagesActive = pagesItems().some((item) => pathname.startsWith(item.href));
 
   useEffect(() => {
+    setRole(readAuthSessionFromCookies().role);
+
     function onDoc(e: MouseEvent) {
       if (!(e.target instanceof Node)) return;
       const insidePages = pagesRef.current && pagesRef.current.contains(e.target);
@@ -56,10 +65,14 @@ export default function Navbar() {
     return () => document.removeEventListener("click", onDoc);
   }, []);
 
+  useEffect(() => {
+    setRole(readAuthSessionFromCookies().role);
+  }, [pathname]);
+
   // No dynamic icon import here to avoid build-time module-resolution errors.
 
   return (
-    <header className="w-full overflow-visible">
+    <header className="fixed top-0 inset-x-0 z-50 w-full overflow-visible">
       <div className="bg-white shadow-sm overflow-visible">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative overflow-visible">
           <div className="flex items-center justify-between h-24 overflow-visible">
@@ -100,12 +113,14 @@ export default function Navbar() {
 
                 {pagesOpen && (
                   <div
-                    className="absolute left-0 mt-0 w-56 bg-white border rounded-md shadow-lg z-[9999]"
+                    className="absolute left-0 mt-0 w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-[9999]"
                     onMouseEnter={() => setPagesOpen(true)}
                     onMouseLeave={() => setPagesOpen(false)}
                   >
-                    {pagesItems().map((it) => (
-                      <Link key={it.href} href={it.href} className="block px-4 py-2 text-gray-700 hover:bg-gray-50">{it.label}</Link>
+                    {pagesItems().map((it, idx) => (
+                      <Link key={it.href} href={it.href} className={`block px-4 py-3 text-gray-700 hover:bg-gray-50 cursor-pointer transition ${
+                        idx !== pagesItems().length - 1 ? 'border-b border-gray-100' : ''
+                      }`}>{it.label}</Link>
                     ))}
                   </div>
                 )}
@@ -125,13 +140,13 @@ export default function Navbar() {
 
                 {contactOpen && (
                   <div
-                    className="absolute left-0 mt-0 w-56 bg-white border rounded-md shadow-lg z-50 overflow-visible"
+                    className="absolute left-0 mt-0 w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-50 overflow-visible"
                     onMouseEnter={() => setContactOpen(true)}
                     onMouseLeave={() => setContactOpen(false)}
                   >
-                    <div className="px-4 py-2 text-sm text-gray-700">Email: support@example.com</div>
-                    <div className="px-4 py-2 text-sm text-gray-700">Phone: +1 (555) 123-4567</div>
-                    <div className="px-4 py-2 text-sm text-gray-700">Help Center</div>
+                    <div className="px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer transition border-b border-gray-100">Email: support@example.com</div>
+                    <div className="px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer transition border-b border-gray-100">Phone: +1 (555) 123-4567</div>
+                    <div className="px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer transition">Help Center</div>
                   </div>
                 )}
               </div>
@@ -140,37 +155,31 @@ export default function Navbar() {
             <div className="absolute right-20 top-1/2 -translate-y-1/2 flex items-center gap-6 z-20">
               <div className="text-right hidden md:block">
                 <div className="text-xs text-gray-500">WELCOME</div>
-                <div className="text-sm font-semibold text-black">LOG IN / REGISTER</div>
+                <Link href="/login" className="text-sm font-semibold text-black hover:underline">
+                  LOG IN / REGISTER
+                </Link>
               </div>
 
-              <div className="relative">
-                <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-xs">U</div>
+              <Link href="/user" className="relative" aria-label="Go to user profile">
+                <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-xs hover:bg-gray-200 transition">U</div>
                 <span className="absolute -top-1 -right-2 bg-[#01A49E] text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">5</span>
-              </div>
+              </Link>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="bg-[#01A49E]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5">
-          <div className="flex justify-center">
-            <div className="w-full max-w-3xl">
-              <div className="relative">
-                <input
-                  aria-label="search"
-                  placeholder=""
-                  className="w-full rounded-full h-8 pl-12 pr-4 bg-white text-sm placeholder-gray-400 border-0 shadow-sm outline-none"
-                />
-                {/* Search icon on the left */}
-                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[#01A49E]">
-                  <MagnifyingGlassIcon className="h-6 w-6 text-[#01A49E]" aria-hidden="true" />
-                </div>
-              </div>
+      {(role === "admin" || role === "tennant") ? (
+        <div className="h-10 bg-[#01A49E]" />
+      ) : (
+        <div className="bg-[#01A49E]">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5">
+            <div className="flex justify-center">
+              <SearchBar />
             </div>
           </div>
         </div>
-      </div>
+      )}
     </header>
   );
 }

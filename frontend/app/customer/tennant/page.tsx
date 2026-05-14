@@ -1,8 +1,13 @@
-export default function CustomerTennant() {
-	return (
-		<main className="p-8">
-			<h1 className="text-2xl font-semibold">Tennant</h1>
-			<p className="mt-4 text-gray-600">Placeholder page — component will be added later.</p>
-		</main>
-	);
+import TenantPage from "@/components/customer/tenant_page";
+
+export default async function CustomerTennant({
+  searchParams,
+}: {
+  searchParams?: Promise<{
+    name?: string;
+    location?: string;
+  }>;
+}) {
+  const params = (await searchParams) ?? {};
+  return <TenantPage name={params.name} location={params.location} />;
 }

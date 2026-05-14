@@ -1,8 +1,6 @@
-export default function Home() {
-  return (
-    <main>
-      <h1>Frontend</h1>
-      <p>Koptal frontend is ready.</p>
-    </main>
-  );
+import { redirect } from 'next/navigation'
+
+export default function Page() {
+	redirect('/home')
 }
+

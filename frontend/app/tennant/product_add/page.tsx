@@ -1,8 +1,20 @@
-export default function TennantAddProduct() {
-	return (
-		<main className="p-8">
-			<h1 className="text-2xl font-semibold">Add Product</h1>
-			<p className="mt-4 text-gray-600">Placeholder page — component will be added later.</p>
-		</main>
-	);
+import ProductEditor from "@/components/tennant/product_editor";
+import { getTenantProductForEditor } from "@/fetch/tenant-product";
+import type { ProductMode } from "@/structure/tenant-product";
+
+type TennantAddProductProps = {
+	searchParams?: Promise<{
+		mode?: string;
+		id?: string;
+		productId?: string;
+	}>;
+};
+
+export default async function TennantAddProduct({ searchParams }: TennantAddProductProps) {
+	const params = (await searchParams) ?? {};
+	const editingId = params.id ?? params.productId;
+	const mode: ProductMode = params.mode === "edit" || !!editingId ? "edit" : "add";
+	const initialProduct = await getTenantProductForEditor(editingId);
+
+	return <ProductEditor mode={mode} initialProduct={initialProduct} />;
 }

@@ -2,85 +2,75 @@
 
 import { useState } from "react";
 import Image from "next/image";
-
-type HistoryItem = {
-  id: string;
-  tenantName: string;
-  date: string;
-  status: "Delivered" | "On the way";
-  tenantImage: string;
-  products: Array<{
-    id: string;
-    name: string;
-    quantity: number;
-    price: number;
-    image: string;
-  }>;
-};
-
-const histories: HistoryItem[] = [
-  {
-    id: "history-1",
-    tenantName: "Green Farm Co.",
-    date: "12 May 2026",
-    status: "Delivered",
-    tenantImage: "/product-placeholder.jpg",
-    products: [
-      {
-        id: "h1-p1",
-        name: "Fresh Tomatoes",
-        quantity: 2,
-        price: 25000,
-        image: "/product-placeholder.jpg",
-      },
-      {
-        id: "h1-p2",
-        name: "Organic Spinach",
-        quantity: 1,
-        price: 15000,
-        image: "/product-placeholder.jpg",
-      },
-    ],
-  },
-  {
-    id: "history-2",
-    tenantName: "Local Market",
-    date: "11 May 2026",
-    status: "On the way",
-    tenantImage: "/product-placeholder.jpg",
-    products: [
-      {
-        id: "h2-p1",
-        name: "Fresh Cabbage",
-        quantity: 3,
-        price: 8000,
-        image: "/product-placeholder.jpg",
-      },
-      {
-        id: "h2-p2",
-        name: "Carrots Bundle",
-        quantity: 2,
-        price: 12000,
-        image: "/product-placeholder.jpg",
-      },
-    ],
-  },
-];
+import Link from "next/link";
+import {
+  formatCurrency,
+  formatOrderDate,
+  getPurchaseOrders,
+  getStatusBadgeClass,
+  getStatusLabel,
+  getTaxRate,
+  isAcceptedOrderStatus,
+} from "@/lib";
 
 export default function History() {
-  const [openHistoryId, setOpenHistoryId] = useState(histories[0].id);
+  const taxRate = getTaxRate();
+
+  const histories = getPurchaseOrders().map((po) => ({
+    id: po.id,
+    poId: po.po_id,
+    tenantImage: po.items[0]?.image ?? "/product-placeholder.jpg",
+    tenantName: po.name,
+    date: formatOrderDate(po.order_date),
+    shippingAddress: po.shipping_address,
+    status: po.status,
+    subtotal: po.subtotal,
+    taxAmount: Math.round(po.subtotal * (taxRate / 100)),
+    totalAmount: po.subtotal + Math.round(po.subtotal * (taxRate / 100)),
+    products: po.items,
+  }));
+
+  const [openHistoryId, setOpenHistoryId] = useState(histories[0]?.id ?? "");
+  const [statusById, setStatusById] = useState<Record<string, string>>(
+    () => Object.fromEntries(histories.map((history) => [history.id, history.status])),
+  );
+
+  const markAsDelivered = (historyId: string) => {
+    setStatusById((current) => {
+      const currentStatus = (current[historyId] ?? "").toLowerCase();
+      if (currentStatus !== "ontheway") return current;
+
+      return {
+        ...current,
+        [historyId]: "Delivered",
+      };
+    });
+  };
 
   return (
-    <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
       <div className="flex flex-col gap-4">
         {histories.map((history) => {
           const isOpen = openHistoryId === history.id;
+          const currentStatus = statusById[history.id] ?? history.status;
+          const isDelivered = currentStatus === "Delivered";
+          const normalizedStatus = currentStatus.toLowerCase();
+          const isAccepted = isAcceptedOrderStatus(currentStatus);
+          const canShowDeliveryStatus = normalizedStatus !== "cancelled";
 
           return (
             <div key={history.id} className="border-2 border-gray-300 rounded-xl overflow-hidden bg-white">
-              <button
+              <div
+                role="button"
+                tabIndex={0}
                 onClick={() => setOpenHistoryId(isOpen ? "" : history.id)}
-                className="w-full p-4 sm:p-5 text-left hover:bg-gray-50 transition-colors"
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    setOpenHistoryId(isOpen ? "" : history.id);
+                  }
+                }}
+                className="w-full p-4 sm:p-5 text-left hover:bg-gray-50 transition-colors cursor-pointer"
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-start gap-4 min-w-0">
@@ -96,23 +86,30 @@ export default function History() {
                     <div className="min-w-0">
                       <p className="text-lg font-bold text-gray-900 truncate">{history.tenantName}</p>
                       <p className="text-sm text-gray-600 mt-1">{history.date}</p>
+                      <p className="text-sm text-gray-500 mt-1 truncate">Address: {history.shippingAddress}</p>
+                      <Link
+                        href={`/system/transaction-details?id=${history.poId}`}
+                        onClick={(event) => event.stopPropagation()}
+                        className="inline-block mt-2 text-sm font-semibold text-teal-600 hover:text-teal-700"
+                      >
+                        Details
+                      </Link>
                     </div>
                   </div>
 
                   <div className="flex flex-col items-end gap-2 flex-shrink-0">
                     <span
-                      className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
-                        history.status === "Delivered"
-                          ? "bg-emerald-100 text-emerald-700"
-                          : "bg-amber-100 text-amber-700"
-                      }`}
+                      className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${getStatusBadgeClass(currentStatus)}`}
                     >
-                      {history.status}
+                      {getStatusLabel(currentStatus)}
                     </span>
+                    <p className={`text-xs font-semibold ${isAccepted ? "text-emerald-700" : "text-gray-600"}`}>
+                      {isAccepted ? "Accepted" : "Not accepted"}
+                    </p>
                     <span className="text-gray-400 text-sm">{isOpen ? "Hide" : "Show"}</span>
                   </div>
                 </div>
-              </button>
+              </div>
 
               <div
                 className={`grid transition-all duration-300 ease-in-out ${
@@ -121,6 +118,37 @@ export default function History() {
               >
                 <div className="overflow-hidden">
                   <div className="border-t border-gray-200 p-4 sm:p-5 bg-gray-50">
+                    {canShowDeliveryStatus && (
+                      <div className="mb-4 flex items-center justify-between gap-3 rounded-lg border border-gray-200 bg-white px-4 py-3">
+                        <div>
+                          <p className="text-sm font-semibold text-gray-900">Delivery status</p>
+                          <p className="text-xs text-gray-600">
+                            {isDelivered
+                              ? "This transaction is locked as delivered."
+                              : isAccepted
+                                ? "You can mark this transaction as delivered."
+                                : "Waiting for tenant to accept this PO."}
+                          </p>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => markAsDelivered(history.id)}
+                          disabled={isDelivered || !isAccepted}
+                          className="rounded-lg px-4 py-2 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-500 bg-teal-600 text-white hover:bg-teal-700"
+                        >
+                          {isDelivered ? "Locked" : isAccepted ? "Mark Delivered" : "Waiting Acceptance"}
+                        </button>
+                      </div>
+                    )}
+
+                    {normalizedStatus === "cancelled" && (
+                      <div className="mb-4 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3">
+                        <p className="text-sm font-semibold text-rose-800">Order cancelled</p>
+                        <p className="text-xs text-rose-700">PO details are still shown below for reference.</p>
+                      </div>
+                    )}
+
                     <div className="grid grid-cols-1 gap-4">
                       {history.products.map((product) => (
                         <div
@@ -139,11 +167,29 @@ export default function History() {
                           <div className="text-right">
                             <p className="text-sm font-semibold text-gray-500">Price</p>
                             <p className="text-base font-bold text-gray-900">
-                              Rp{(product.price * product.quantity).toLocaleString()}
+                              Rp{formatCurrency(product.price * product.quantity)}
                             </p>
                           </div>
                         </div>
                       ))}
+                    </div>
+
+                    <div className="mt-4 rounded-lg border border-gray-200 bg-white p-4">
+                      <p className="text-xs font-semibold uppercase tracking-[0.15em] text-gray-500">Payment Summary</p>
+                      <div className="mt-3 space-y-2 text-sm">
+                        <div className="flex items-center justify-between text-gray-700">
+                          <span>Subtotal</span>
+                          <span className="font-semibold">Rp{formatCurrency(history.subtotal)}</span>
+                        </div>
+                        <div className="flex items-center justify-between text-gray-700">
+                          <span>Tax (PPN {taxRate}%)</span>
+                          <span className="font-semibold">Rp{formatCurrency(history.taxAmount)}</span>
+                        </div>
+                        <div className="flex items-center justify-between border-t border-gray-200 pt-2 text-gray-900">
+                          <span className="font-semibold">Total</span>
+                          <span className="text-base font-bold">Rp{formatCurrency(history.totalAmount)}</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>

@@ -1,9 +1,9 @@
-import PO_Details from "@/components/customer/PO_Details";
+import Basket from "@/components/customer/basket";
 
 export default function CustomerBasket() {
 	return (
 		<main className="w-full bg-white">
-			<PO_Details />
+			<Basket />
 		</main>
 	);
 }

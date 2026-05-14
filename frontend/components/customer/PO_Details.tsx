@@ -2,62 +2,10 @@
 
 import { useState } from "react";
 import Image from "next/image";
-
-type POItem = {
-  id: string;
-  name: string;
-  quantity: number;
-  price: number;
-  image: string;
-  details: string;
-};
-
-type PurchaseOrder = {
-  id: string;
-  name: string;
-  items: POItem[];
-};
-
-const purchaseOrders: PurchaseOrder[] = [
-  {
-    id: "po-1",
-    name: "PO 1",
-    items: [
-      {
-        id: "item-1",
-        name: "Fresh Tomatoes",
-        quantity: 2,
-        price: 25000,
-        image: "/product-placeholder.jpg",
-        details: "100g pack",
-      },
-      {
-        id: "item-2",
-        name: "Organic Spinach",
-        quantity: 1,
-        price: 15000,
-        image: "/product-placeholder.jpg",
-        details: "100g pack",
-      },
-    ],
-  },
-  {
-    id: "po-2",
-    name: "PO 2",
-    items: [
-      {
-        id: "item-3",
-        name: "Fresh Cabbage",
-        quantity: 3,
-        price: 8000,
-        image: "/product-placeholder.jpg",
-        details: "Per piece",
-      },
-    ],
-  },
-];
+import { formatCurrency, getPurchaseOrders, type PurchaseOrder } from "@/lib";
 
 export default function PO_Details() {
+  const purchaseOrders = getPurchaseOrders();
   const [selectedPO, setSelectedPO] = useState(purchaseOrders[0]);
   const [items, setItems] = useState(selectedPO.items);
 
@@ -133,7 +81,7 @@ export default function PO_Details() {
                     </div>
                     <div className="text-right flex-shrink-0">
                       <p className="text-sm font-semibold text-gray-500">Price</p>
-                      <p className="text-lg font-bold text-gray-900">Rp{(item.price * item.quantity).toLocaleString()}</p>
+                      <p className="text-lg font-bold text-gray-900">Rp{formatCurrency(item.price * item.quantity)}</p>
                     </div>
                   </div>
                   <p className="mt-3 text-sm text-gray-600">{item.details}</p>
@@ -148,7 +96,7 @@ export default function PO_Details() {
             <div className="w-full max-w-sm">
               <div className="border-t-2 border-gray-300 pt-4 flex items-center justify-between mb-4">
                 <span className="text-lg font-semibold text-gray-700">Total Price</span>
-                <span className="text-2xl font-bold text-gray-900">Rp{totalPrice.toLocaleString()}</span>
+                <span className="text-2xl font-bold text-gray-900">Rp{formatCurrency(totalPrice)}</span>
               </div>
               <button className="w-full rounded-lg bg-teal-600 px-4 py-3 font-semibold text-white hover:bg-teal-700 transition-colors">
                 Checkout
