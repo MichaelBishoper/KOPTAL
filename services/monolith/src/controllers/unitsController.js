@@ -1,11 +1,15 @@
 const Units = require('../dao/unitsDao');
 const { AppError } = require('../../middleware/errorHandler');
+const { units: mockUnits } = require('../data/units');
 
 async function listUnits(req, res, next) {
   try {
     const rows = await Units.getAllUnits();
     res.json({ success: true, data: rows });
-  } catch (err) { next(err); }
+  } catch (_dbErr) {
+    // DB not connected — serve mock data.
+    res.json({ success: true, data: mockUnits });
+  }
 }
 
 async function getUnit(req, res, next) {
@@ -14,7 +18,13 @@ async function getUnit(req, res, next) {
     const row = await Units.getUnitById(id);
     if (!row) return next(new AppError('Unit not found', 404));
     res.json({ success: true, data: row });
-  } catch (err) { next(err); }
+  } catch (_dbErr) {
+    // DB not connected — serve mock data.
+    const id = Number(req.params.id);
+    const row = mockUnits.find((u) => u.unit_id === id);
+    if (!row) return res.status(404).json({ success: false, error: 'Unit not found' });
+    res.json({ success: true, data: row });
+  }
 }
 
 async function createUnit(req, res, next) {

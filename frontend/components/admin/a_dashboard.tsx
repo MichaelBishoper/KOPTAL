@@ -1,25 +1,33 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { getAdminCategories, getTenantProducts, saveAdminCategories } from "@/lib";
+import { useEffect, useMemo, useState } from "react";
+import { getAdminCategories, getTenantProducts, loadAdminSettings, loadTenantProducts, saveAdminCategories } from "@/lib";
 import { TaxSettings } from "./TaxSettings";
 
 export default function AdminDashboardComponent() {
   const [categories, setCategories] = useState<string[]>(() => getAdminCategories());
   const [newCategory, setNewCategory] = useState("");
   const [message, setMessage] = useState<string | null>(null);
+  const [products, setProducts] = useState(() => getTenantProducts());
+
+  useEffect(() => {
+    void Promise.all([loadAdminSettings(), loadTenantProducts()]).then(([_, loadedProducts]) => {
+      setCategories(getAdminCategories());
+      setProducts(loadedProducts);
+    });
+  }, []);
 
   const productCountByCategory = useMemo(() => {
     const counter = new Map<string, number>();
-    for (const product of getTenantProducts()) {
+    for (const product of products) {
       const key = (product.category || "").trim();
       if (!key) continue;
       counter.set(key, (counter.get(key) ?? 0) + 1);
     }
     return counter;
-  }, []);
+  }, [products]);
 
-  const addCategory = () => {
+  const addCategory = async () => {
     const normalized = newCategory.trim();
     if (!normalized) {
       setMessage("Category name cannot be empty.");
@@ -31,19 +39,21 @@ export default function AdminDashboardComponent() {
       return;
     }
 
-    setCategories((current) => saveAdminCategories([...current, normalized]));
+    const updated = await saveAdminCategories([...categories, normalized]);
+    setCategories(updated);
     setNewCategory("");
     setMessage(`Category \"${normalized}\" added.`);
   };
 
-  const removeCategory = (categoryName: string) => {
+  const removeCategory = async (categoryName: string) => {
     const usedByCount = productCountByCategory.get(categoryName) ?? 0;
     if (usedByCount > 0) {
       setMessage(`Cannot remove \"${categoryName}\" because ${usedByCount} product(s) still use it.`);
       return;
     }
 
-    setCategories((current) => saveAdminCategories(current.filter((category) => category !== categoryName)));
+    const updated = await saveAdminCategories(categories.filter((c) => c !== categoryName));
+    setCategories(updated);
     setMessage(`Category \"${categoryName}\" removed.`);
   };
 

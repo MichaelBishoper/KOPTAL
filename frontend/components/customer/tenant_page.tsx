@@ -2,7 +2,9 @@
 
 import Image from "next/image";
 import Catalog from "@/components/marketplace/Catalog";
-import { getTenantByName, getTenants } from "@/lib";
+import { useEffect, useState } from "react";
+import { getTenantByName, getTenants, loadTenants } from "@/lib";
+import type { TenantRow } from "@/structure/db";
 
 type TenantPageProps = {
   name?: string;
@@ -10,7 +12,23 @@ type TenantPageProps = {
 };
 
 export default function TenantPage({ name, location }: TenantPageProps) {
-  const selectedTenant = getTenantByName(name ?? "Green Farm Co.") ?? getTenants()[0];
+  const [tenant, setTenant] = useState<TenantRow | undefined>(() => getTenantByName(name ?? "Green Farm Co.") ?? getTenants()[0]);
+
+  useEffect(() => {
+    void loadTenants().then((tenants) => {
+      setTenant(getTenantByName(name ?? "Green Farm Co.") ?? tenants[0]);
+    });
+  }, [name]);
+
+  if (!tenant) {
+    return (
+      <main className="min-h-screen">
+        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">Loading tenant...</div>
+      </main>
+    );
+  }
+
+  const selectedTenant = tenant;
   const displayedLocation = location ?? selectedTenant.location ?? "West Java";
 
   return (

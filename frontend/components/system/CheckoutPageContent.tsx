@@ -10,6 +10,7 @@ import {
   getCheckoutPaymentInstructions,
   getCheckoutSubtotal,
   getTaxRate,
+  loadCustomers,
   readAuthSessionFromCookies,
   resolveSavedShippingAddress,
   type AddressMode,
@@ -48,8 +49,10 @@ export default function CheckoutPageContent() {
       return;
     }
 
-    const address = resolveSavedShippingAddress(session.userId);
-    setSavedShippingAddress(address);
+    void loadCustomers().then(() => {
+      const address = resolveSavedShippingAddress(session.userId);
+      setSavedShippingAddress(address);
+    });
   }, []);
 
   useEffect(() => {

@@ -1,7 +1,39 @@
-// Replace this re-export with `fetch('/api/purchase-orders')` when the backend is ready.
-// Keep the exported names the same so components do not need to change.
 import { getTaxRate } from "./admins";
-export { type POItem, type PurchaseOrder, getPurchaseOrders, purchaseOrderRows } from "@/data/purchase-orders";
+import type { PoLineItemRow, PurchaseOrderRow } from "@/structure/db";
+import { fetchPurchaseOrdersFromAPI } from "@/fetch/purchase-orders";
+
+// Types previously in @/data/purchase-orders — kept here so callers don't change.
+export type POItem = PoLineItemRow & {
+  id: string;
+  name: string;
+  price: number;
+  image: string;
+  details: string;
+  unitLabel: string;
+};
+
+export type PurchaseOrder = PurchaseOrderRow & {
+  id: string;
+  name: string;
+  items: POItem[];
+};
+
+// Module-level cache — populated by loadPurchaseOrders().
+let cache: PurchaseOrder[] = [];
+export let purchaseOrderRows: PurchaseOrderRow[] = [];
+
+/** Fetch all purchase orders from the API and populate the module cache. */
+export async function loadPurchaseOrders(customerId?: number): Promise<PurchaseOrder[]> {
+  const data = await fetchPurchaseOrdersFromAPI(customerId);
+  cache = data as PurchaseOrder[];
+  purchaseOrderRows = data as PurchaseOrderRow[];
+  return cache;
+}
+
+/** Returns cached purchase orders (call loadPurchaseOrders() first). */
+export function getPurchaseOrders(): PurchaseOrder[] {
+  return cache;
+}
 
 export function getStatusBadgeClass(status: string): string {
   const s = status.toLowerCase();

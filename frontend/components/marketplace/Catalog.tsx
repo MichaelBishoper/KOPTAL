@@ -2,7 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { formatCurrency, getTenantProducts, toCatalogCard, filterProductsBySearch, type TenantProductCard } from "@/lib";
+import { useEffect, useState } from "react";
+import { formatCurrency, loadTenantProducts, loadTenants, loadUnits, toCatalogCard, filterProductsBySearch, type TenantProductCard } from "@/lib";
 
 interface CatalogProps {
   products?: TenantProductCard[];
@@ -11,16 +12,24 @@ interface CatalogProps {
 }
 
 export default function Catalog({ products = [], columns = 4, searchQuery = "" }: CatalogProps) {
-  // Use provided products or fetch all products
-  let baseProducts = products.length > 0 ? products : getTenantProducts().map(toCatalogCard);
-  
-  // Apply search filter if query is provided
-  if (searchQuery.trim()) {
-    const filteredRows = filterProductsBySearch(searchQuery);
-    baseProducts = filteredRows.map(toCatalogCard);
-  }
+  const [allCards, setAllCards] = useState<TenantProductCard[]>([]);
 
-  const displayProducts = baseProducts;
+  useEffect(() => {
+    // Load tenants + units first so toCatalogCard can resolve names synchronously.
+    Promise.all([loadTenants(), loadUnits(), loadTenantProducts()]).then(([, , rows]) => {
+      setAllCards(rows.map(toCatalogCard));
+    });
+  }, []);
+
+  // Use provided products, or search-filtered cards, or all loaded cards.
+  let displayProducts: TenantProductCard[];
+  if (products.length > 0) {
+    displayProducts = products;
+  } else if (searchQuery.trim()) {
+    displayProducts = filterProductsBySearch(searchQuery).map(toCatalogCard);
+  } else {
+    displayProducts = allCards;
+  }
 
   return (
     <div className="w-full py-8">

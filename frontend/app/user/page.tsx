@@ -30,9 +30,9 @@ export default function UserPage() {
     void loadUserData(role, userId);
   }, [router]);
 
-  const loadUserData = (role: Exclude<UserType, "guest">, userId: number) => {
+  const loadUserData = async (role: Exclude<UserType, "guest">, userId: number) => {
     try {
-      const user = getUserByRoleAndId(role, userId) as UserRecord | null;
+      const user = await getUserByRoleAndId(role, userId) as UserRecord | null;
 
       if (!user) {
         router.replace("/login?next=/user");

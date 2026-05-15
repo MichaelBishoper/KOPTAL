@@ -1,15 +1,23 @@
-import { units } from "@/data/units";
 import type { UnitRow } from "@/structure/db";
+import { fetchUnitsFromAPI } from "@/fetch/units";
 
-// Replace the `units` import with `fetch('/api/units')` when backend data is ready.
+// Module-level cache — populated by loadUnits().
+let cache: UnitRow[] = [];
 
+/** Fetch all units from the API and populate the module cache. */
+export async function loadUnits(): Promise<UnitRow[]> {
+  cache = await fetchUnitsFromAPI();
+  return cache;
+}
+
+/** Returns all units from cache (call loadUnits() first). */
 export function getUnits(): UnitRow[] {
-  return units;
+  return cache;
 }
 
 export function getUnitById(unitId?: number): UnitRow | undefined {
   if (unitId == null) return undefined;
-  return units.find((unit) => unit.unit_id === unitId);
+  return cache.find((unit) => unit.unit_id === unitId);
 }
 
 export function getUnitLabel(unitId?: number): string {

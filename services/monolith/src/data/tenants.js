@@ -1,6 +1,5 @@
-import type { TenantRow } from "@/structure/db";
-
-export const tenants: TenantRow[] = [
+// Mock tenant data — replace with DB queries when PostgreSQL is connected.
+const tenants = [
   {
     tenant_id: 1,
     name: "Green Farm Co.",
@@ -57,3 +56,5 @@ export const tenants: TenantRow[] = [
     created_at: "2026-01-01T00:00:00.000Z",
   },
 ];
+
+module.exports = { tenants };

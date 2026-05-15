@@ -4,6 +4,7 @@ export type UserRole = "guest" | "customer" | "tenant" | "admin";
 export const COOKIE_KEYS = {
   role: "koptal_role",
   userId: "koptal_user_id",
+  token: "koptal_token",
 } as const;
 
 export function normalizeRoleValue(value: string | null | undefined): AppRole {

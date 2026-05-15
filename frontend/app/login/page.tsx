@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { writeAuthCookies } from "@/lib";
 
 type LoginRole = "admin" | "tennant" | "customer";
 
@@ -15,8 +14,12 @@ const ROLE_DESTINATION: Record<LoginRole, string> = {
 export default function LoginPage() {
   const router = useRouter();
 
-  const handleRolePick = (role: LoginRole) => {
-    writeAuthCookies(role, 1);
+  const handleRolePick = async (role: LoginRole) => {
+    await fetch("/api/auth/dev-login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ role, userId: 1 }),
+    });
 
     const nextPath = new URLSearchParams(window.location.search).get("next") ?? "";
     const fallbackPath = ROLE_DESTINATION[role];

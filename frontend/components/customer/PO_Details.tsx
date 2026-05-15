@@ -1,16 +1,34 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
-import { formatCurrency, getPurchaseOrders, type PurchaseOrder } from "@/lib";
+import { formatCurrency, getPurchaseOrders, loadPurchaseOrders, type POItem, type PurchaseOrder } from "@/lib";
 
 export default function PO_Details() {
-  const purchaseOrders = getPurchaseOrders();
-  const [selectedPO, setSelectedPO] = useState(purchaseOrders[0]);
-  const [items, setItems] = useState(selectedPO.items);
+  const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>(() => getPurchaseOrders());
+  const [selectedPoId, setSelectedPoId] = useState("");
+  const [items, setItems] = useState<POItem[]>([]);
+
+  useEffect(() => {
+    void loadPurchaseOrders().then((rows) => {
+      setPurchaseOrders(rows);
+      setSelectedPoId((current) => current || rows[0]?.id || "");
+    });
+  }, []);
+
+  useEffect(() => {
+    const selectedPO = purchaseOrders.find((purchaseOrder) => purchaseOrder.id === selectedPoId) ?? purchaseOrders[0];
+    setItems(selectedPO?.items ?? []);
+  }, [purchaseOrders, selectedPoId]);
+
+  if (purchaseOrders.length === 0) {
+    return <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">Loading purchase orders...</div>;
+  }
+
+  const selectedPO = purchaseOrders.find((purchaseOrder) => purchaseOrder.id === selectedPoId) ?? purchaseOrders[0];
 
   const selectPurchaseOrder = (purchaseOrder: PurchaseOrder) => {
-    setSelectedPO(purchaseOrder);
+    setSelectedPoId(purchaseOrder.id);
     setItems(purchaseOrder.items);
   };
 

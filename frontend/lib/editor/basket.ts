@@ -1,12 +1,5 @@
 import type { TenantProductRow } from "@/structure/db";
 
-// API migration scaffold (basket CRUD):
-// 1) READ: replace `getBasketItems` with GET `/api/basket`.
-// 2) CREATE: replace `saveBasketItemDraft`/`addBasketItem` write path with POST `/api/basket`.
-// 3) DELETE item: replace `removeBasketItem` with DELETE `/api/basket/:productId`.
-// 4) DELETE by tenant/clear: use DELETE `/api/basket?tenantId=...` or dedicated endpoints.
-// 5) Remove localStorage helpers once backend persistence is active.
-
 export type BasketSavePayload = {
   product_id: number;
   tenant_id: number;

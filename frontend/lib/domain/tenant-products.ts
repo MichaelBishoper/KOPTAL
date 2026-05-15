@@ -1,10 +1,7 @@
-import { tenantProducts } from "@/data/tenant-products";
 import type { TenantProductRow } from "@/structure/db";
 import { getTenantById, getTenantByName } from "./tenants";
 import { getUnitById } from "./units";
-
-// Replace the `tenantProducts` import with `fetch('/api/tenant-products')` when backend data is ready.
-// Keep the mapping helpers here so components stay stable.
+import { fetchTenantProductsFromAPI, fetchTenantProductByIdFromAPI } from "@/fetch/tenant-products";
 
 export type TenantProductCard = {
   id: string;
@@ -27,14 +24,35 @@ export type TenantProductDetails = TenantProductRow & {
   availability?: number;
 };
 
+// Module-level cache — populated by loadTenantProducts().
+let cache: TenantProductRow[] = [];
+
+/** Fetch all tenant products from the API and populate the module cache. */
+export async function loadTenantProducts(): Promise<TenantProductRow[]> {
+  cache = await fetchTenantProductsFromAPI();
+  return cache;
+}
+
+/** Returns all tenant products from cache (call loadTenantProducts() first). */
 export function getTenantProducts(): TenantProductRow[] {
-  return tenantProducts;
+  return cache;
 }
 
 export function getTenantProductById(productId?: number | string): TenantProductRow | undefined {
   if (productId == null || productId === "") return undefined;
-  const numericId = Number(productId);
-  return tenantProducts.find((product) => product.product_id === numericId || String(product.product_id) === String(productId));
+  return cache.find(
+    (product) =>
+      product.product_id === Number(productId) ||
+      String(product.product_id) === String(productId),
+  );
+}
+
+/** Fetch a single product from the API (bypasses cache — use for product detail pages). */
+export async function loadTenantProductById(
+  productId?: number | string,
+): Promise<TenantProductRow | undefined> {
+  if (productId == null || productId === "") return undefined;
+  return fetchTenantProductByIdFromAPI(Number(productId));
 }
 
 export function toCatalogCard(product: TenantProductRow): TenantProductCard {

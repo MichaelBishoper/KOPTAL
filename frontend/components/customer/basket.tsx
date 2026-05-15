@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { ChevronLeftIcon, TrashIcon } from "@heroicons/react/24/outline";
-import { formatCurrency, getBasketItems, getTaxRate, getTenantById, removeBasketItem, type BasketItem } from "@/lib";
+import { formatCurrency, getBasketItems, getTaxRate, getTenantById, loadTenants, removeBasketItem, type BasketItem } from "@/lib";
 
 type BasketGroup = {
   tenantId: number;
@@ -18,11 +18,23 @@ export default function Basket() {
   const router = useRouter();
   const [items, setItems] = useState<BasketItem[]>([]);
   const [isReady, setIsReady] = useState(false);
+  const [tenantsReady, setTenantsReady] = useState(false);
 
   useEffect(() => {
     setItems(getBasketItems());
-    setIsReady(true);
+    void loadTenants().finally(() => {
+      setTenantsReady(true);
+      setIsReady(true);
+    });
   }, []);
+
+  if (!tenantsReady) {
+    return (
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
+        <div className="rounded-2xl border border-gray-200 bg-white p-6 text-gray-600">Loading basket...</div>
+      </div>
+    );
+  }
 
   const groupedItems = useMemo<BasketGroup[]>(() => {
     const groups = new Map<number, BasketItem[]>();

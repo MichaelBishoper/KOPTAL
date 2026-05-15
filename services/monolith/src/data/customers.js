@@ -1,6 +1,5 @@
-import type { CustomerRow } from "@/structure/db";
-
-export const customers: CustomerRow[] = [
+// Mock customer data — replace with DB queries when PostgreSQL is connected.
+const customers = [
   {
     customer_id: 1,
     name: "Alya Putri",
@@ -14,3 +13,5 @@ export const customers: CustomerRow[] = [
     created_at: "2026-01-01T00:00:00.000Z",
   },
 ];
+
+module.exports = { customers };

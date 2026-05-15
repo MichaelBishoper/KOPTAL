@@ -1,11 +1,15 @@
 const Products = require('../dao/tenantProductsDao');
 const { AppError } = require('../../middleware/errorHandler');
+const { tenantProducts: mockProducts } = require('../data/tenant-products');
 
 async function listProducts(req, res, next) {
   try {
     const rows = await Products.getAllProducts();
     res.json({ success: true, data: rows });
-  } catch (err) { next(err); }
+  } catch (_dbErr) {
+    // DB not connected — serve mock data.
+    res.json({ success: true, data: mockProducts });
+  }
 }
 
 async function getProduct(req, res, next) {
@@ -14,7 +18,13 @@ async function getProduct(req, res, next) {
     const row = await Products.getProductById(id);
     if (!row) return next(new AppError('Product not found', 404));
     res.json({ success: true, data: row });
-  } catch (err) { next(err); }
+  } catch (_dbErr) {
+    // DB not connected — serve mock data.
+    const id = Number(req.params.id);
+    const row = mockProducts.find((p) => p.product_id === id);
+    if (!row) return res.status(404).json({ success: false, error: 'Product not found' });
+    res.json({ success: true, data: row });
+  }
 }
 
 async function createProduct(req, res, next) {

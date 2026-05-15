@@ -2,12 +2,21 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo, useState } from "react";
-import { formatCurrency, getTenantProducts, getTenants, getUnitLabel, toTenantDashboardCard } from "@/lib";
+import { useMemo, useState, useEffect } from "react";
+import { formatCurrency, loadTenantProducts, loadTenants, getUnitLabel, toTenantDashboardCard } from "@/lib";
+import type { TenantProductRow, TenantRow } from "@/structure/db";
 
 export default function TennantDashboardPage() {
-  const tenant = getTenants()[0];
-  const rows = getTenantProducts();
+  const [tenant, setTenant] = useState<TenantRow | undefined>(undefined);
+  const [rows, setRows] = useState<TenantProductRow[]>([]);
+
+  useEffect(() => {
+    Promise.all([loadTenants(), loadTenantProducts()]).then(([tenants, products]) => {
+      setTenant(tenants[0]);
+      setRows(products);
+    });
+  }, []);
+
   const cards = useMemo(() => rows.map(toTenantDashboardCard), [rows]);
   const [hiddenCardIds, setHiddenCardIds] = useState<string[]>([]);
 

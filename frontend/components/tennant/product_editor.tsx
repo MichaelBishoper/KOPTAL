@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ChevronLeftIcon } from "@heroicons/react/24/outline";
@@ -10,6 +10,7 @@ import {
   formatCurrency,
   getAdminCategories,
   hasApprovedCategory,
+  loadAdminSettings,
   readImageFileAsDataUrl,
   saveTenantProductDraft,
 } from "@/lib";
@@ -29,7 +30,13 @@ export default function ProductEditor({ mode, initialProduct }: ProductEditorPro
   );
   const [savedMessage, setSavedMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const categoryOptions = getAdminCategories();
+  const [categoryOptions, setCategoryOptions] = useState<string[]>(() => getAdminCategories());
+
+  useEffect(() => {
+    void loadAdminSettings().then(() => {
+      setCategoryOptions(getAdminCategories());
+    });
+  }, []);
 
   const updateField = <K extends keyof ProductDraft>(field: K, value: ProductDraft[K]) => {
     setDraft((currentDraft) => ({ ...currentDraft, [field]: value }));
@@ -60,20 +67,22 @@ export default function ProductEditor({ mode, initialProduct }: ProductEditorPro
     event.currentTarget.value = "";
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!hasApprovedCategory(draft.category)) {
       setSavedMessage(null);
       setErrorMessage("Choose an approved category before saving this product.");
       return;
     }
 
-    const payload = saveTenantProductDraft(draft, initialProduct);
-    void payload.then((savedPayload) => {
-      console.log("Saving tenant product", savedPayload);
-    });
+    const savedProduct = await saveTenantProductDraft(draft, initialProduct);
+    if (!savedProduct) {
+      setSavedMessage(null);
+      setErrorMessage("Backend save failed. Check your auth token and service status.");
+      return;
+    }
 
     setErrorMessage(null);
-    setSavedMessage(mode === "add" ? "Product created locally." : "Product updated locally.");
+    setSavedMessage(mode === "add" ? "Product created in backend." : "Product updated in backend.");
   };
 
   return (

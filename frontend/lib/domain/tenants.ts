@@ -1,18 +1,27 @@
-import { tenants } from "@/data/tenants";
 import type { TenantRow } from "@/structure/db";
+import { fetchTenantsFromAPI, fetchTenantByIdFromAPI } from "@/fetch/tenants";
 
-// Replace the `tenants` import with `fetch('/api/tenants')` when backend data is ready.
+// Module-level cache — populated by loadTenants().
+// Sync accessors (getTenantById, getTenantByName) read from this cache.
+let cache: TenantRow[] = [];
 
+/** Fetch all tenants from the API and populate the module cache. */
+export async function loadTenants(): Promise<TenantRow[]> {
+  cache = await fetchTenantsFromAPI();
+  return cache;
+}
+
+/** Returns all tenants from cache (call loadTenants() first). */
 export function getTenants(): TenantRow[] {
-  return tenants;
+  return cache;
 }
 
 export function getTenantById(tenantId?: number): TenantRow | undefined {
   if (tenantId == null) return undefined;
-  return tenants.find((tenant) => tenant.tenant_id === tenantId);
+  return cache.find((tenant) => tenant.tenant_id === tenantId);
 }
 
 export function getTenantByName(name?: string): TenantRow | undefined {
   if (!name) return undefined;
-  return tenants.find((tenant) => tenant.name === name);
+  return cache.find((tenant) => tenant.name === name);
 }

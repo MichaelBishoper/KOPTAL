@@ -73,9 +73,9 @@ export function UserProfile({ user, userType }: UserProfileProps) {
     setDraft((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     // Save through lib so backend API integration can be centralized later.
-    saveUserProfileDraft(user, draft);
+    await saveUserProfileDraft(user, draft);
     setIsEditing(false);
   };
 

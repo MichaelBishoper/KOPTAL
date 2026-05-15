@@ -1,6 +1,5 @@
-import type { AdminRow } from "@/structure/db";
-
-export const admins: AdminRow[] = [
+// Mock admin data — replace with DB queries when PostgreSQL is connected.
+const admins = [
   {
     manager_id: 1,
     name: "System Admin",
@@ -11,3 +10,5 @@ export const admins: AdminRow[] = [
     created_at: "2026-01-01T00:00:00.000Z",
   },
 ];
+
+module.exports = { admins };

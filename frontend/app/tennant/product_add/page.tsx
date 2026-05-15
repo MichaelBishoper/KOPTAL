@@ -1,5 +1,5 @@
 import ProductEditor from "@/components/tennant/product_editor";
-import { getTenantProductForEditor } from "@/fetch/tenant-product";
+import { getTenantProductForEditor } from "@/lib";
 import type { ProductMode } from "@/structure/tenant-product";
 
 type TennantAddProductProps = {

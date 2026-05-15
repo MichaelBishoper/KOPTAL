@@ -1,12 +1,10 @@
 import type { TenantProductRow } from "@/structure/db";
 import type { ProductDraft, ProductUnitType } from "@/structure/tenant-product";
-
-// API migration scaffold (tenant products CRUD):
-// 1) READ list/item: use GET `/api/tenant-products` and GET `/api/tenant-products/:id` in domain/fetch layer.
-// 2) CREATE: replace `createTenantProductDraft` body with POST `/api/tenant-products`.
-// 3) UPDATE: replace `updateTenantProductDraft` body with PUT/PATCH `/api/tenant-products/:id`.
-// 4) DELETE: replace `deleteTenantProductDraft` body with DELETE `/api/tenant-products/:id`.
-// 5) Keep payload builder/helpers so component contract remains stable.
+import {
+  createTenantProductOnAPI,
+  deleteTenantProductOnAPI,
+  updateTenantProductOnAPI,
+} from "@/fetch/tenant-products";
 
 export type TenantProductSavePayload = {
   product_id?: number;
@@ -21,11 +19,6 @@ export type TenantProductSavePayload = {
   location: string;
   unitType: ProductUnitType;
 };
-
-// POST: frontend will call an API route like `/api/tenant-products`.
-// PUT/PATCH: frontend will call an API route like `/api/tenant-products/:id`.
-// DELETE: frontend will call an API route like `/api/tenant-products/:id`.
-// Backend team can keep DAO code inside the API handler, controller, or service layer.
 
 export function createEmptyProductDraft(
   tenantName = "Your Store",
@@ -94,27 +87,19 @@ export function buildTenantProductSavePayload(
 export async function saveTenantProductDraft(
   draft: ProductDraft,
   initialProduct?: TenantProductRow,
-): Promise<TenantProductSavePayload> {
-  // Backend people can swap this function body for a `fetch()` call to the API route.
-  return buildTenantProductSavePayload(draft, initialProduct);
+): Promise<TenantProductRow | undefined> {
+  const payload = buildTenantProductSavePayload(draft, initialProduct);
+
+  if (initialProduct?.product_id) {
+    return updateTenantProductOnAPI(initialProduct.product_id, payload);
+  }
+
+  return createTenantProductOnAPI(payload);
 }
 
-export async function createTenantProductDraft(draft: ProductDraft): Promise<TenantProductSavePayload> {
-  // POST seam: backend will replace this with `fetch('/api/tenant-products', { method: 'POST' })`.
-  return buildTenantProductSavePayload(draft);
-}
-
-export async function updateTenantProductDraft(
-  draft: ProductDraft,
-  initialProduct: TenantProductRow,
-): Promise<TenantProductSavePayload> {
-  // PUT/PATCH seam: backend will replace this with `fetch('/api/tenant-products/:id', { method: 'PUT' | 'PATCH' })`.
-  return buildTenantProductSavePayload(draft, initialProduct);
-}
-
-export async function deleteTenantProductDraft(productId: number): Promise<{ product_id: number }> {
-  // DELETE seam: backend will replace this with `fetch('/api/tenant-products/:id', { method: 'DELETE' })`.
-  return { product_id: productId };
+export async function deleteTenantProductDraft(productId: number): Promise<{ product_id: number; deleted: boolean }> {
+  const deleted = await deleteTenantProductOnAPI(productId);
+  return { product_id: productId, deleted };
 }
 
 export function hasApprovedCategory(category: string): boolean {

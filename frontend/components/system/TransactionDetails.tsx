@@ -1,6 +1,8 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { getPurchaseOrders, getTenantById, getStatusLabel, getStatusBadgeClass, formatCurrency, getTaxRate } from "@/lib";
+import { loadPurchaseOrders } from "@/lib";
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 
@@ -8,7 +10,20 @@ export function TransactionDetails() {
   const searchParams = useSearchParams();
   const poId = searchParams.get("id");
 
-  const orders = getPurchaseOrders();
+  const [orders, setOrders] = useState(() => getPurchaseOrders());
+
+  useEffect(() => {
+    void loadPurchaseOrders().then(setOrders);
+  }, []);
+
+  if (orders.length === 0) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-gray-500">Loading order details...</p>
+      </div>
+    );
+  }
+
   const order = poId ? orders.find((o) => o.po_id === parseInt(poId)) : null;
 
   if (!order) {

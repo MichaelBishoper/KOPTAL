@@ -1,15 +1,22 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo, useState } from "react";
-import { formatCurrency, getTenantProducts, getTenants, getUnitLabel, toTenantDashboardCard } from "@/lib";
+import { formatCurrency, getTenants, getTenantProducts, getUnitLabel, loadTenantProducts, loadTenants, toTenantDashboardCard } from "@/lib";
 
 export default function TennantDashboardPage() {
-  const tenant = getTenants()[0];
-  const rows = getTenantProducts();
+  const [tenant, setTenant] = useState(() => getTenants()[0]);
+  const [rows, setRows] = useState(() => getTenantProducts());
   const cards = useMemo(() => rows.map(toTenantDashboardCard), [rows]);
   const [hiddenCardIds, setHiddenCardIds] = useState<string[]>([]);
+
+  useEffect(() => {
+    void Promise.all([loadTenants(), loadTenantProducts()]).then(([tenants, products]) => {
+      setTenant(tenants[0]);
+      setRows(products);
+    });
+  }, []);
 
   const removeCard = (cardId: string) => {
     setHiddenCardIds((current) => (current.includes(cardId) ? current : [...current, cardId]));

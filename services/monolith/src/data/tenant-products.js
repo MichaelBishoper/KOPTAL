@@ -1,7 +1,5 @@
-import type { TenantProductRow } from "@/structure/db";
-
-// Tenant products as an array matching the `tenant_products` table in structure.md
-export const tenantProducts: TenantProductRow[] = [
+// Mock tenant product data — replace with DB queries when PostgreSQL is connected.
+const tenantProducts = [
   {
     product_id: 1,
     tenant_id: 1,
@@ -69,3 +67,5 @@ export const tenantProducts: TenantProductRow[] = [
     description: "Farm potatoes sorted for wholesale and retail buyers.",
   },
 ];
+
+module.exports = { tenantProducts };
