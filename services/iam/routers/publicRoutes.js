@@ -13,7 +13,10 @@ router.get('/tenants', async (req, res, next) => {
         const safeTenants = tenants.map(t => ({
             tenant_id: t.tenant_id,
             name: t.name,
-            verified: t.verified
+            verified: t.verified,
+            location: t.location,
+            image_url: t.image_url,
+            created_at: t.created_at,
         }));
         
         res.json(safeTenants);

@@ -11,9 +11,10 @@ import {
   getAdminCategories,
   hasApprovedCategory,
   loadAdminSettings,
-  readImageFileAsDataUrl,
   saveTenantProductDraft,
 } from "@/lib";
+import { fetchAuthSessionFromAPI } from "@/fetch/auth";
+import { uploadImageFileOnAPI } from "@/fetch/file-upload";
 import type { ProductDraft, ProductMode } from "@/structure/tenant-product";
 import type { TenantProductRow } from "@/structure/db";
 
@@ -52,16 +53,26 @@ export default function ProductEditor({ mode, initialProduct }: ProductEditorPro
     const file = event.target.files?.[0];
     if (!file) return;
 
-    void readImageFileAsDataUrl(file)
-      .then((uploadedImage) => {
+    void (async () => {
+      const session = await fetchAuthSessionFromAPI();
+      const tenantId = initialProduct?.tenant_id ?? session.userId;
+
+      if (!tenantId) {
+        throw new Error("Tenant id unavailable");
+      }
+
+      const uploadedUrl = await uploadImageFileOnAPI(file, "tenant_product", tenantId);
+      return uploadedUrl;
+    })()
+      .then((uploadedImageUrl) => {
         setDraft((currentDraft) => ({
           ...currentDraft,
-          images: [uploadedImage],
+          images: [uploadedImageUrl],
         }));
         setSavedMessage(null);
       })
       .catch(() => {
-        setErrorMessage("Failed to read image file.");
+        setErrorMessage("Failed to upload image file.");
       });
 
     // Allow selecting the same file again.

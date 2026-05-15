@@ -27,7 +27,6 @@ type RegisterForm = {
   shipping_address: string;
   // tenant fields
   location: string;
-  image_url: string;
 };
 
 export default function LoginPage() {
@@ -53,7 +52,6 @@ export default function LoginPage() {
     billing_address: "",
     shipping_address: "",
     location: "",
-    image_url: "",
   });
 
   const canUseNext = useMemo(() => {
@@ -126,8 +124,13 @@ export default function LoginPage() {
     }
 
     if (registerForm.user_type === "tenant") {
-      if (registerForm.location) payload.location = registerForm.location;
-      if (registerForm.image_url) payload.image_url = registerForm.image_url;
+      if (!registerForm.location.trim()) {
+        setError("Location is required for tenant registration.");
+        setLoading(false);
+        return;
+      }
+
+      payload.location = registerForm.location.trim();
     }
 
     try {
@@ -313,9 +316,10 @@ export default function LoginPage() {
               {registerForm.user_type === "tenant" ? (
                 <>
                   <label className="block">
-                    <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-600">Location <span className="font-normal text-gray-400 normal-case">(optional)</span></span>
+                    <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-600">Location</span>
                     <input
                       type="text"
+                      required
                       value={registerForm.location}
                       onChange={(event) => handleRegisterChange("location", event.target.value)}
                       placeholder="e.g. Jakarta, Indonesia"
@@ -323,16 +327,7 @@ export default function LoginPage() {
                     />
                   </label>
 
-                  <label className="block">
-                    <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-600">Shop Image URL <span className="font-normal text-gray-400 normal-case">(optional)</span></span>
-                    <input
-                      type="url"
-                      value={registerForm.image_url}
-                      onChange={(event) => handleRegisterChange("image_url", event.target.value)}
-                      placeholder="https://..."
-                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:border-teal-500 focus:outline-none"
-                    />
-                  </label>
+
                 </>
               ) : null}
 

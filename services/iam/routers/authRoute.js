@@ -67,6 +67,10 @@
 
             let result;
             if (user_type === 'tenant') {
+                if (!String(userData.location || '').trim()) {
+                    return next(new AppError('Tenant location is required', 400));
+                }
+
                 userData.password_hash = await hashPassword(userData.password);
                 result = await withDbTimeout(createTenant(userData));
             } else if (user_type === 'customer') {

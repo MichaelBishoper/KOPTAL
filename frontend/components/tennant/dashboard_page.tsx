@@ -4,10 +4,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { fetchAuthSessionFromAPI } from "@/fetch/auth";
-import { formatCurrency, getTenantById, getTenantProducts, getUnitLabel, loadTenantProducts, toTenantDashboardCard } from "@/lib";
+import { formatCurrency, getTenantProducts, getTenantProfileImage, getUnitLabel, loadTenantProducts, shouldUseNativeImage, toTenantDashboardCard, type EditableUserRow } from "@/lib";
+import type { TenantRow } from "@/structure/db";
 
 export default function TennantDashboardPage() {
   const [tenantId, setTenantId] = useState<number | null>(null);
+  const [tenantProfile, setTenantProfile] = useState<TenantRow | null>(null);
   const [isSessionReady, setIsSessionReady] = useState(false);
   const [productsVersion, setProductsVersion] = useState(0);
 
@@ -25,12 +27,26 @@ export default function TennantDashboardPage() {
     if (!tenantId) return;
 
     void (async () => {
-      await loadTenantProducts();
+      const [profileRes] = await Promise.all([
+        fetch("/api/iam/tenants/profile", {
+          credentials: "include",
+          cache: "no-store",
+        }),
+        loadTenantProducts(),
+      ]);
+
+      if (profileRes.ok) {
+        const profile = (await profileRes.json()) as EditableUserRow;
+        setTenantProfile(profile as TenantRow);
+      }
+
       setProductsVersion((current) => current + 1);
     })();
   }, [tenantId]);
 
-  const tenant = useMemo(() => (tenantId ? getTenantById(tenantId) : undefined), [tenantId]);
+  const tenant = tenantProfile ?? undefined;
+  const tenantImage = getTenantProfileImage(tenant);
+  const useNativeTenantImage = shouldUseNativeImage(tenantImage);
   const rows = useMemo(() => {
     if (!tenantId) return [];
     return getTenantProducts().filter((row) => row.tenant_id === tenantId);
@@ -49,18 +65,20 @@ export default function TennantDashboardPage() {
           <aside className="lg:sticky lg:top-[175px] self-start">
             <div className="rounded-3xl border border-stone-200 bg-white p-6 shadow-sm flex flex-col items-center text-center">
               <div className="h-56 w-56 sm:h-72 sm:w-72 rounded-3xl overflow-hidden border border-stone-200 bg-stone-100">
-                {tenant?.image ? (
+                {useNativeTenantImage ? (
+                  <img
+                    src={tenantImage}
+                    alt={tenant?.name ?? "Tenant"}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
                   <Image
-                    src={tenant.image}
-                    alt={tenant.name}
+                    src={tenantImage}
+                    alt={tenant?.name ?? "Tenant"}
                     width={448}
                     height={448}
                     className="h-full w-full object-cover"
                   />
-                ) : (
-                  <div className="h-full w-full flex items-center justify-center text-sm font-medium text-stone-500">
-                    No profile image
-                  </div>
                 )}
               </div>
               <p className="mt-4 text-xs font-semibold uppercase tracking-[0.2em] text-teal-700">Tenant Profile</p>

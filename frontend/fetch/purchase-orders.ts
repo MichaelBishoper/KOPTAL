@@ -1,6 +1,7 @@
 import type { PoLineItemRow, PurchaseOrderRow, TenantProductRow } from "@/structure/db";
 import { fetchAuthSessionFromAPI } from "@/fetch/auth";
 import { fetchTenantProductByIdFromAPI } from "@/fetch/tenant-products";
+import { fetchTenantsFromAPI } from "@/fetch/tenants";
 
 type CreatePurchaseOrderPayload = {
   tenant_id: number;
@@ -27,6 +28,9 @@ export type POItem = PoLineItemRow & {
 export type PurchaseOrder = PurchaseOrderRow & {
   id: string;
   name: string;
+  tenantName?: string;
+  tenantImage?: string;
+  tenantLocation?: string;
   items: POItem[];
 };
 
@@ -134,9 +138,11 @@ function buildItemDetails(product: TenantProductRow | undefined, order: Purchase
 
 export async function fetchPurchaseOrdersFromAPI(): Promise<PurchaseOrder[]> {
   const orders = await fetchOrderRowsFromAPI();
+  const tenants = await fetchTenantsFromAPI();
 
   const mapped = await Promise.all(
     orders.map(async (order) => {
+      const tenant = tenants.find((entry) => entry.tenant_id === order.tenant_id);
       const itemRows = await fetchOrderItemsFromAPI(order.po_id);
 
       const items = await Promise.all(
@@ -158,6 +164,9 @@ export async function fetchPurchaseOrdersFromAPI(): Promise<PurchaseOrder[]> {
         ...order,
         id: `po-${order.po_id}`,
         name: `PO ${order.po_id}`,
+        tenantName: tenant?.name,
+        tenantImage: tenant?.image,
+        tenantLocation: tenant?.location,
         items,
       } as PurchaseOrder;
     })

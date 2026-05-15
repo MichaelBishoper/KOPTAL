@@ -46,6 +46,8 @@ export function createEmptyProductDraft(
 export function createProductDraftFromRow(product?: TenantProductRow): ProductDraft {
   if (!product) return createEmptyProductDraft();
 
+  const primaryImage = product.image ?? "/product-placeholder.jpg";
+
   return {
     id: String(product.product_id),
     name: product.name,
@@ -55,9 +57,9 @@ export function createProductDraftFromRow(product?: TenantProductRow): ProductDr
     tenantName: "",
     location: "",
     images: [
-      "/product-placeholder.jpg",
-      "/product-placeholder.jpg",
-      "/product-placeholder.jpg",
+      primaryImage,
+      primaryImage,
+      primaryImage,
     ],
     description: product.description ?? "",
     availability: String(product.quantity ?? 0),

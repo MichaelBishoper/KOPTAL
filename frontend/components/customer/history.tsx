@@ -9,9 +9,12 @@ import {
   getPurchaseOrders,
   getStatusBadgeClass,
   getStatusLabel,
+  getTenantById,
+  getTenantProfileImage,
   getTaxRate,
   isAcceptedOrderStatus,
   loadPurchaseOrders,
+  shouldUseNativeImage,
 } from "@/lib";
 import { updatePurchaseOrderStatusOnAPI } from "@/fetch/purchase-orders";
 
@@ -34,8 +37,8 @@ export default function History() {
       getPurchaseOrders().map((po) => ({
         id: po.id,
         poId: po.po_id,
-        tenantImage: po.items[0]?.image ?? "/product-placeholder.jpg",
-        tenantName: po.name,
+        tenantImage: po.tenantImage ?? getTenantProfileImage(getTenantById(po.tenant_id)),
+        tenantName: po.tenantName ?? po.name,
         date: formatOrderDate(po.order_date),
         shippingAddress: po.shipping_address,
         status: po.status,
@@ -111,6 +114,7 @@ export default function History() {
           const isDelivered = normalizedStatus === "delivered";
           const isAccepted = isAcceptedOrderStatus(currentStatus);
           const canShowDeliveryStatus = normalizedStatus !== "cancelled";
+          const useNativeTenantImage = shouldUseNativeImage(history.tenantImage);
 
           return (
             <div key={history.id} className="border-2 border-gray-300 rounded-xl overflow-hidden bg-white">
@@ -129,12 +133,16 @@ export default function History() {
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-start gap-4 min-w-0">
                     <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden border border-gray-200 bg-gray-100 flex-shrink-0">
-                      <Image
-                        src={history.tenantImage}
-                        alt={history.tenantName}
-                        fill
-                        className="object-cover"
-                      />
+                      {useNativeTenantImage ? (
+                        <img src={history.tenantImage} alt={history.tenantName} className="h-full w-full object-cover" />
+                      ) : (
+                        <Image
+                          src={history.tenantImage}
+                          alt={history.tenantName}
+                          fill
+                          className="object-cover"
+                        />
+                      )}
                     </div>
 
                     <div className="min-w-0">

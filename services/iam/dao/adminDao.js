@@ -36,13 +36,15 @@ async function getAdminByEmail(email) {
 
 // Update
 async function updateAdmin(id, adminData) {
-    const { name, email, phone } = adminData;
+    const { name, email, phone, image_url, image } = adminData;
+    const normalizedImage = image_url ?? image ?? null;
     const result = await client.query(
         `UPDATE admins
-         SET name = $1, email = $2, phone = $3
+         SET name = $1, email = $2, phone = $3,
+             image_url = COALESCE($5, image_url)
          WHERE manager_id = $4
          RETURNING *`,
-        [name, email, phone, id]
+        [name, email, phone, id, normalizedImage || null]
     );
     return result.rows[0];
 }

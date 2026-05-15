@@ -32,7 +32,12 @@ function toProductRow(raw: unknown): TenantProductRow | null {
     category: String(row.category ?? ""),
     quantity,
     price,
-    image: typeof row.image === "string" ? row.image : undefined,
+    image:
+      typeof row.image === "string"
+        ? row.image
+        : typeof row.image_url === "string"
+          ? row.image_url
+          : undefined,
     description: typeof row.description === "string" ? row.description : undefined,
   };
 }

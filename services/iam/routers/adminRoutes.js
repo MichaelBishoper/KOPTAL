@@ -32,9 +32,12 @@ router.put('/profile', verifyToken, async (req, res, next) => {
             throw new AppError('Access denied', 403);
         }
         
-        const { name, email, phone } = req.body;
+        const { name, email, phone, image, image_url } = req.body;
         
-        const updated = await updateAdmin(req.user.user_id, { name, email, phone });
+        const updated = await updateAdmin(req.user.user_id, {
+            name, email, phone,
+            image_url: image_url ?? image ?? undefined,
+        });
         
         const { password_hash, ...profile } = updated;
         res.json(profile);

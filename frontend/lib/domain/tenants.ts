@@ -2,6 +2,7 @@ import type { TenantRow } from "@/structure/db";
 import { fetchTenantsFromAPI } from "@/fetch/tenants";
 
 let cachedTenants: TenantRow[] = [];
+const TENANT_IMAGE_FALLBACK = "/product-placeholder.jpg";
 
 export function getTenants(): TenantRow[] {
   return [...cachedTenants];
@@ -23,4 +24,31 @@ export function getTenantById(tenantId?: number): TenantRow | undefined {
 export function getTenantByName(name?: string): TenantRow | undefined {
   if (!name) return undefined;
   return cachedTenants.find((tenant) => tenant.name === name);
+}
+
+export function getTenantProfileImage(tenant?: Pick<TenantRow, "image"> | null): string {
+  const image = typeof tenant?.image === "string" ? tenant.image.trim() : "";
+  return image || TENANT_IMAGE_FALLBACK;
+}
+
+export function shouldUseNativeImage(src?: string | null): boolean {
+  const value = typeof src === "string" ? src.trim() : "";
+  if (!value) return false;
+
+  return (
+    value.startsWith("blob:") ||
+    value.startsWith("data:") ||
+    value.startsWith("http://localhost:3002/") ||
+    value.startsWith("http://127.0.0.1:3002/")
+  );
+}
+
+export function upsertTenantCache(tenant: TenantRow): void {
+  const index = cachedTenants.findIndex((entry) => entry.tenant_id === tenant.tenant_id);
+  if (index >= 0) {
+    cachedTenants[index] = tenant;
+    return;
+  }
+
+  cachedTenants.push(tenant);
 }

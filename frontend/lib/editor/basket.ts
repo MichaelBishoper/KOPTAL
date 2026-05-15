@@ -16,6 +16,9 @@ export type BasketSavePayload = {
   subtotal: number;
   image: string;
   name: string;
+  tenant_name?: string;
+  tenant_location?: string;
+  tenant_image?: string;
 };
 
 export type BasketItem = BasketSavePayload & {
@@ -49,7 +52,7 @@ function writeBasketItems(items: BasketItem[]) {
 }
 
 export function buildBasketSavePayload(
-  product: TenantProductRow,
+  product: TenantProductRow & { tenantName?: string; location?: string; tenantImage?: string },
   quantity: number,
 ): BasketSavePayload {
   const subtotal = Math.round(product.price * quantity);
@@ -63,6 +66,9 @@ export function buildBasketSavePayload(
     subtotal,
     image: product.image ?? "/product-placeholder.jpg",
     name: product.name,
+    tenant_name: product.tenantName,
+    tenant_location: product.location,
+    tenant_image: product.tenantImage,
   };
 }
 
@@ -132,7 +138,7 @@ export function clearBasketItems(): BasketItem[] {
 }
 
 export async function saveBasketItemDraft(
-  product: TenantProductRow,
+  product: TenantProductRow & { tenantName?: string; location?: string; tenantImage?: string },
   quantity: number,
 ): Promise<BasketSavePayload> {
   // POST seam: replace this with `fetch('/api/basket', { method: 'POST' })`.

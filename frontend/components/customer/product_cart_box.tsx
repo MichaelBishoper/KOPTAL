@@ -12,6 +12,7 @@ interface ProductCartBoxProps {
     // optional display helpers (may be provided by parent)
     tenantName?: string;
     location?: string;
+    tenantImage?: string;
     image?: string;
   };
 }

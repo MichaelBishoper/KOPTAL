@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Catalog from "@/components/marketplace/Catalog";
-import { getTenantByName, getTenantProducts, getTenants, toCatalogCard } from "@/lib";
+import { getTenantByName, getTenantProducts, getTenantProfileImage, getTenants, shouldUseNativeImage, toCatalogCard } from "@/lib";
 
 type TenantPageProps = {
   name?: string;
@@ -11,6 +11,8 @@ type TenantPageProps = {
 
 export default function TenantPage({ name, location }: TenantPageProps) {
   const selectedTenant = (name ? getTenantByName(name) : undefined) ?? getTenants()[0];
+  const selectedTenantImage = getTenantProfileImage(selectedTenant);
+  const useNativeTenantImage = shouldUseNativeImage(selectedTenantImage);
   const displayedLocation = location ?? selectedTenant?.location;
   const joinedDate = selectedTenant?.created_at ? new Date(selectedTenant.created_at) : null;
   const joinedYear = joinedDate && !Number.isNaN(joinedDate.getTime()) ? joinedDate.getFullYear() : null;
@@ -28,13 +30,21 @@ export default function TenantPage({ name, location }: TenantPageProps) {
           <aside className="lg:sticky lg:top-[175px] self-start">
             <div className="rounded-3xl border border-stone-200 bg-white p-6 shadow-sm flex flex-col items-center text-center">
               <div className="h-56 w-56 sm:h-72 sm:w-72 rounded-3xl overflow-hidden border border-stone-200 bg-stone-100">
-                <Image
-                  src={selectedTenant?.image ?? "/product-placeholder.jpg"}
-                  alt={selectedTenant?.name ?? "Tenant"}
-                  width={448}
-                  height={448}
-                  className="h-full w-full object-cover"
-                />
+                {useNativeTenantImage ? (
+                  <img
+                    src={selectedTenantImage}
+                    alt={selectedTenant?.name ?? "Tenant"}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <Image
+                    src={selectedTenantImage}
+                    alt={selectedTenant?.name ?? "Tenant"}
+                    width={448}
+                    height={448}
+                    className="h-full w-full object-cover"
+                  />
+                )}
               </div>
 
               <p className="mt-4 text-xs font-semibold uppercase tracking-[0.2em] text-teal-700">Tenant Profile</p>

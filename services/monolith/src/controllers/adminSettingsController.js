@@ -12,15 +12,35 @@ async function readDistinctCategoriesFromProducts() {
       .map((row) => row.category)
       .filter((category) => typeof category === 'string');
   } catch {
-    // Keep endpoint available even when DB is offline; cache/defaults remain source for now.
+    return [];
+  }
+}
+
+async function readCategoriesFromAdmins() {
+  try {
+    const res = await pool.query(
+      'SELECT categories FROM admins WHERE categories IS NOT NULL'
+    );
+    const all = [];
+    for (const row of res.rows) {
+      if (Array.isArray(row.categories)) all.push(...row.categories);
+    }
+    return [...new Set(all.filter((c) => typeof c === 'string' && c.trim()))];
+  } catch {
     return [];
   }
 }
 
 async function getAdminSettings(req, res, next) {
   try {
-    const categories = await readDistinctCategoriesFromProducts();
-    settingsStore.seedCategories(categories);
+    const [productCategories, adminCategories] = await Promise.all([
+      readDistinctCategoriesFromProducts(),
+      readCategoriesFromAdmins(),
+    ]);
+
+    // admin-defined categories first, then fill in any from existing products
+    const merged = [...new Set([...adminCategories, ...productCategories])];
+    settingsStore.updateSettings({ categories: merged });
 
     const settings = settingsStore.getSettings();
     res.json({ success: true, data: settings });
@@ -38,6 +58,11 @@ async function updateAdminSettings(req, res, next) {
     const patch = {};
     if (Array.isArray(req.body.categories)) {
       patch.categories = req.body.categories;
+      // persist to the logged-in admin's categories column in DB
+      await pool.query(
+        'UPDATE admins SET categories = $1 WHERE manager_id = $2',
+        [req.body.categories, req.user.user_id]
+      );
     }
 
     if (typeof req.body.tax_rate === 'number' && Number.isFinite(req.body.tax_rate)) {

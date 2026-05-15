@@ -1,6 +1,6 @@
 "use client";
 
-import { getPurchaseOrders, getTenantById, getStatusLabel, getStatusBadgeClass, formatCurrency, getTaxRate } from "@/lib";
+import { getPurchaseOrders, getTenantById, getTenantProfileImage, getStatusLabel, getStatusBadgeClass, formatCurrency, getTaxRate, shouldUseNativeImage } from "@/lib";
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 
@@ -20,6 +20,8 @@ export function TransactionDetails() {
   }
 
   const tenant = getTenantById(order.tenant_id);
+  const tenantImage = order.tenantImage ?? getTenantProfileImage(tenant);
+  const useNativeTenantImage = shouldUseNativeImage(tenantImage);
   const statusClass = getStatusBadgeClass(order.status);
   const taxRate = getTaxRate();
   const taxAmount = Math.round(order.subtotal * (taxRate / 100));
@@ -73,16 +75,24 @@ export function TransactionDetails() {
               {tenant ? (
                 <>
                   <div className="flex gap-4 pb-4 border-b">
-                    <Image
-                      src={tenant.image || "/product-placeholder.jpg"}
-                      alt={tenant.name}
-                      width={60}
-                      height={60}
-                      className="w-16 h-16 rounded-lg object-cover border border-gray-200"
-                    />
+                    {useNativeTenantImage ? (
+                      <img
+                        src={tenantImage}
+                        alt={tenant.name}
+                        className="w-16 h-16 rounded-lg object-cover border border-gray-200"
+                      />
+                    ) : (
+                      <Image
+                        src={tenantImage}
+                        alt={tenant.name}
+                        width={60}
+                        height={60}
+                        className="w-16 h-16 rounded-lg object-cover border border-gray-200"
+                      />
+                    )}
                     <div>
-                      <p className="font-bold text-gray-800">{tenant.name}</p>
-                      <p className="text-sm text-gray-600">{tenant.location || "Location not specified"}</p>
+                      <p className="font-bold text-gray-800">{order.tenantName ?? tenant.name}</p>
+                      <p className="text-sm text-gray-600">{order.tenantLocation ?? tenant.location ?? "Location not specified"}</p>
                     </div>
                   </div>
                   <div>

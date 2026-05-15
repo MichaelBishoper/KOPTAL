@@ -2,7 +2,8 @@ const pool = require('../config/db');
 
 async function getAllProducts() {
   const res = await pool.query(
-    `SELECT p.product_id, p.tenant_id, t.name as tenant_name, p.name, p.quantity, p.unit_id, u.unit_name, p.price
+    `SELECT p.product_id, p.tenant_id, t.name as tenant_name, p.name, p.quantity, p.unit_id, u.unit_name,
+            p.price, p.category, p.description, p.image_url as image
      FROM tenant_products p
      LEFT JOIN tenants t ON p.tenant_id = t.tenant_id
      LEFT JOIN units u ON p.unit_id = u.unit_id
@@ -13,7 +14,8 @@ async function getAllProducts() {
 
 async function getProductById(id) {
   const res = await pool.query(
-    `SELECT p.product_id, p.tenant_id, t.name as tenant_name, p.name, p.quantity, p.unit_id, u.unit_name, p.price
+    `SELECT p.product_id, p.tenant_id, t.name as tenant_name, p.name, p.quantity, p.unit_id, u.unit_name,
+            p.price, p.category, p.description, p.image_url as image
      FROM tenant_products p
      LEFT JOIN tenants t ON p.tenant_id = t.tenant_id
      LEFT JOIN units u ON p.unit_id = u.unit_id
@@ -23,18 +25,32 @@ async function getProductById(id) {
   return res.rows[0];
 }
 
-async function createProduct({ tenant_id, name, quantity, unit_id, price }) {
+async function createProduct({ tenant_id, name, quantity, unit_id, price, category, description, image, image_url }) {
+  const normalizedImage = image_url ?? image ?? null;
   const res = await pool.query(
-    'INSERT INTO tenant_products (tenant_id, name, quantity, unit_id, price) VALUES ($1, $2, $3, $4, $5) RETURNING product_id, tenant_id, name, quantity, unit_id, price',
-    [tenant_id, name, quantity, unit_id, price]
+    `INSERT INTO tenant_products (tenant_id, name, quantity, unit_id, price, category, description, image_url)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+     RETURNING product_id, tenant_id, name, quantity, unit_id, price, category, description, image_url as image`,
+    [tenant_id, name, quantity, unit_id, price, category ?? null, description ?? null, normalizedImage]
   );
   return res.rows[0];
 }
 
-async function updateProduct(id, { tenant_id, name, quantity, unit_id, price }) {
+async function updateProduct(id, { tenant_id, name, quantity, unit_id, price, category, description, image, image_url }) {
+  const normalizedImage = image_url ?? image ?? null;
   const res = await pool.query(
-    'UPDATE tenant_products SET tenant_id = $1, name = $2, quantity = $3, unit_id = $4, price = $5 WHERE product_id = $6 RETURNING product_id, tenant_id, name, quantity, unit_id, price',
-    [tenant_id, name, quantity, unit_id, price, id]
+    `UPDATE tenant_products
+     SET tenant_id = $1,
+         name = $2,
+         quantity = $3,
+         unit_id = $4,
+         price = $5,
+         category = $6,
+         description = $7,
+         image_url = $8
+     WHERE product_id = $9
+     RETURNING product_id, tenant_id, name, quantity, unit_id, price, category, description, image_url as image`,
+    [tenant_id, name, quantity, unit_id, price, category ?? null, description ?? null, normalizedImage, id]
   );
   return res.rows[0];
 }

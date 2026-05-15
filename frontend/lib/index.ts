@@ -20,7 +20,15 @@ export {
   removeBasketTenantItems,
   type BasketItem,
 } from "./editor/basket";
-export { getTenantById, getTenantByName, getTenants, loadTenants } from "./domain/tenants";
+export {
+  getTenantById,
+  getTenantByName,
+  getTenantProfileImage,
+  getTenants,
+  loadTenants,
+  shouldUseNativeImage,
+  upsertTenantCache,
+} from "./domain/tenants";
 export {
   getAdmins,
   getAdminCategories,

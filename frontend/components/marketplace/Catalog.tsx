@@ -37,14 +37,12 @@ export default function Catalog({ products = [], columns = 4, searchQuery = "" }
           >
             <Link href={`/customer/product/${product.id}`} className="block cursor-pointer">
               <div className="relative w-full aspect-square bg-gray-100">
-                {product.image !== "/product-placeholder.jpg" && (
-                  <Image
-                    src={product.image}
-                    alt={product.name}
-                    fill
-                    className="object-cover"
-                  />
-                )}
+                <Image
+                  src={product.image || "/product-placeholder.jpg"}
+                  alt={product.name}
+                  fill
+                  className="object-cover"
+                />
               </div>
 
               <div className="p-4 pb-3">

@@ -35,12 +35,12 @@ async function getTenantByEmail(email) {
 
 // Update
 async function updateTenant(id, tenantData) {
-    const { name, email, phone } = tenantData;
+    const { name, email, phone, location, image_url } = tenantData;
     const result = await client.query(
         `UPDATE tenants
-        SET name = $1, email = $2, phone = $3
-        WHERE tenant_id = $4
-        RETURNING *`, [name, email, phone, id]
+        SET name = $1, email = $2, phone = $3, location = $4, image_url = $5
+        WHERE tenant_id = $6
+        RETURNING *`, [name, email, phone, location ?? null, image_url ?? null, id]
     );
     return result.rows[0]; 
 }

@@ -8,6 +8,7 @@ type PublicTenant = {
   verified?: boolean;
   location?: string;
   image?: string;
+  image_url?: string;
   created_at?: string;
 };
 
@@ -22,7 +23,11 @@ function toTenantRow(raw: PublicTenant, index: number): TenantRow {
     phone: String(raw.phone ?? ""),
     verified: Boolean(raw.verified),
     location: typeof raw.location === "string" ? raw.location : undefined,
-    image: typeof raw.image === "string" ? raw.image : undefined,
+    image: typeof raw.image === "string"
+      ? raw.image
+      : typeof raw.image_url === "string"
+        ? raw.image_url
+        : undefined,
     password_hash: "",
     created_at: createdAt,
   };

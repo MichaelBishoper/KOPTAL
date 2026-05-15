@@ -1,6 +1,7 @@
 import type { TenantProductRow } from "@/structure/db";
 import { fetchTenantProductByIdFromAPI, fetchTenantProductsFromAPI } from "@/fetch/tenant-products";
-import { getTenantById, getTenantByName } from "./tenants";
+import { fetchTenantsFromAPI } from "@/fetch/tenants";
+import { getTenantById, getTenantByName, getTenantProfileImage } from "./tenants";
 import { getUnitById } from "./units";
 
 let cachedTenantProducts: TenantProductRow[] = [];
@@ -19,6 +20,7 @@ export type TenantProductCard = {
 export type TenantProductDetails = TenantProductRow & {
   id: string;
   tenantName?: string;
+  tenantImage?: string;
   location?: string;
   image?: string;
   images?: string[];
@@ -32,8 +34,29 @@ export function getTenantProducts(): TenantProductRow[] {
 
 export async function loadTenantProducts(): Promise<TenantProductRow[]> {
   const rows = await fetchTenantProductsFromAPI();
-  cachedTenantProducts = rows;
+  const tenants = await fetchTenantsFromAPI();
+  cachedTenantProducts = rows.map((row) => {
+    const tenant = tenants.find((entry) => entry.tenant_id === row.tenant_id);
+    return Object.assign({}, row, {
+      tenant_name: tenant?.name,
+      tenant_image: tenant?.image,
+      location: tenant?.location,
+    }) as TenantProductRow;
+  });
   return [...cachedTenantProducts];
+}
+
+function getAttachedTenantMeta(product: TenantProductRow): {
+  tenantName?: string;
+  tenantImage?: string;
+  location?: string;
+} {
+  const record = product as Record<string, unknown>;
+  return {
+    tenantName: typeof record.tenant_name === "string" ? record.tenant_name : undefined,
+    tenantImage: typeof record.tenant_image === "string" ? record.tenant_image : undefined,
+    location: typeof record.location === "string" ? record.location : undefined,
+  };
 }
 
 export function getTenantProductById(productId?: number | string): TenantProductRow | undefined {
@@ -60,14 +83,15 @@ export async function loadTenantProductById(productId?: number | string): Promis
 
 export function toCatalogCard(product: TenantProductRow): TenantProductCard {
   const tenant = getTenantById(product.tenant_id);
+  const attached = getAttachedTenantMeta(product);
   const unit = getUnitById(product.unit_id);
 
   return {
     id: String(product.product_id),
     name: product.name,
-    image: product.image ?? tenant?.image ?? "/product-placeholder.jpg",
-    tenantName: tenant?.name ?? "Unknown Tenant",
-    location: tenant?.location ?? "",
+    image: product.image ?? attached.tenantImage ?? getTenantProfileImage(tenant),
+    tenantName: attached.tenantName ?? tenant?.name ?? "Unknown Tenant",
+    location: attached.location ?? tenant?.location ?? "",
     price: product.price,
     quantity: product.quantity,
     unitLabel: unit?.unit_name ?? "Items",
@@ -76,14 +100,16 @@ export function toCatalogCard(product: TenantProductRow): TenantProductCard {
 
 export function toProductDetails(product: TenantProductRow): TenantProductDetails {
   const tenant = getTenantById(product.tenant_id);
+  const attached = getAttachedTenantMeta(product);
 
   return {
     ...product,
     id: String(product.product_id),
-    tenantName: tenant?.name ?? "Unknown Tenant",
-    location: tenant?.location ?? "",
-    image: product.image ?? tenant?.image ?? "/product-placeholder.jpg",
-    images: product.image ? [product.image] : [tenant?.image ?? "/product-placeholder.jpg"],
+    tenantName: attached.tenantName ?? tenant?.name ?? "Unknown Tenant",
+    tenantImage: attached.tenantImage ?? getTenantProfileImage(tenant),
+    location: attached.location ?? tenant?.location ?? "",
+    image: product.image ?? attached.tenantImage ?? getTenantProfileImage(tenant),
+    images: product.image ? [product.image] : [attached.tenantImage ?? getTenantProfileImage(tenant)],
     description: product.description ?? "",
     availability: product.quantity,
   };
@@ -91,11 +117,12 @@ export function toProductDetails(product: TenantProductRow): TenantProductDetail
 
 export function toTenantDashboardCard(product: TenantProductRow) {
   const tenant = getTenantById(product.tenant_id);
+  const attached = getAttachedTenantMeta(product);
   return {
     id: String(product.product_id),
     name: product.name,
-    image: product.image ?? tenant?.image ?? "/product-placeholder.jpg",
-    tenantName: tenant?.name ?? "Tenant",
+    image: product.image ?? attached.tenantImage ?? getTenantProfileImage(tenant),
+    tenantName: attached.tenantName ?? tenant?.name ?? "Tenant",
   };
 }
 

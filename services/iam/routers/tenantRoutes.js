@@ -12,7 +12,58 @@ router.get('/profile', verifyToken, async (req, res, next) => {
         }
         
         const tenant = await getTenantById(req.user.user_id);
-        res.json({ id: tenant.tenant_id, name: tenant.name, email: tenant.email, verified: tenant.verified });
+        if (!tenant) {
+            throw new AppError('Tenant not found', 404);
+        }
+
+        res.json({
+            tenant_id: tenant.tenant_id,
+            name: tenant.name,
+            email: tenant.email,
+            phone: tenant.phone,
+            verified: tenant.verified,
+            location: tenant.location,
+            image: tenant.image_url,
+            password_hash: tenant.password_hash,
+            created_at: tenant.created_at,
+        });
+    } catch (error) {
+        next(error);
+    }
+});
+
+router.put('/profile', verifyToken, async (req, res, next) => {
+    try {
+        if (req.user.user_type !== 'tenant') {
+            throw new AppError('Access denied', 403);
+        }
+
+        const tenant = await getTenantById(req.user.user_id);
+        if (!tenant) {
+            throw new AppError('Tenant not found', 404);
+        }
+
+        const payload = {
+            name: req.body.name ?? tenant.name,
+            email: req.body.email ?? tenant.email,
+            phone: req.body.phone ?? tenant.phone,
+            location: req.body.location ?? tenant.location,
+            image_url: req.body.image ?? req.body.image_url ?? tenant.image_url,
+        };
+
+        const updatedTenant = await updateTenant(req.user.user_id, payload);
+
+        res.json({
+            tenant_id: updatedTenant.tenant_id,
+            name: updatedTenant.name,
+            email: updatedTenant.email,
+            phone: updatedTenant.phone,
+            verified: updatedTenant.verified,
+            location: updatedTenant.location,
+            image: updatedTenant.image_url,
+            password_hash: updatedTenant.password_hash,
+            created_at: updatedTenant.created_at,
+        });
     } catch (error) {
         next(error);
     }
@@ -50,9 +101,15 @@ router.put('/:id', verifyToken, async (req, res, next) => {
             throw new AppError('Tenant not found', 404);
         }
         
-        const { name, email, phone } = req.body;
+        const { name, email, phone, location, image_url, image } = req.body;
         
-        const updatedTenant = await updateTenant(id, { name, email, phone });
+        const updatedTenant = await updateTenant(id, {
+            name,
+            email,
+            phone,
+            location,
+            image_url: image_url ?? image,
+        });
         
         res.json({
             success: true,
@@ -61,7 +118,9 @@ router.put('/:id', verifyToken, async (req, res, next) => {
                 name: updatedTenant.name,
                 email: updatedTenant.email,
                 phone: updatedTenant.phone,
-                verified: updatedTenant.verified
+                verified: updatedTenant.verified,
+                location: updatedTenant.location,
+                image: updatedTenant.image_url,
             }
         });
     } catch (error) {

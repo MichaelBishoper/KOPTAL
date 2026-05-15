@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Catalog from "@/components/marketplace/Catalog";
-import { getTenantByName, getTenants } from "@/lib";
+import { getTenantByName, getTenantProfileImage, shouldUseNativeImage } from "@/lib";
 
 type TenantPageProps = {
   name?: string;
@@ -11,6 +11,8 @@ type TenantPageProps = {
 
 export default function TenantPage({ name, location }: TenantPageProps) {
   const selectedTenant = name ? getTenantByName(name) : undefined;
+  const selectedTenantImage = getTenantProfileImage(selectedTenant);
+  const useNativeTenantImage = shouldUseNativeImage(selectedTenantImage);
   const displayedLocation = location ?? selectedTenant?.location;
 
   return (
@@ -20,18 +22,20 @@ export default function TenantPage({ name, location }: TenantPageProps) {
           <aside className="lg:sticky lg:top-[175px] self-start">
             <div className="rounded-3xl border border-stone-200 bg-white p-6 shadow-sm flex flex-col items-center text-center">
               <div className="h-56 w-56 sm:h-72 sm:w-72 rounded-3xl overflow-hidden border border-stone-200 bg-stone-100">
-                {selectedTenant?.image ? (
+                {useNativeTenantImage ? (
+                  <img
+                    src={selectedTenantImage}
+                    alt={selectedTenant?.name ?? "Tenant"}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
                   <Image
-                    src={selectedTenant.image}
-                    alt={selectedTenant.name}
+                    src={selectedTenantImage}
+                    alt={selectedTenant?.name ?? "Tenant"}
                     width={448}
                     height={448}
                     className="h-full w-full object-cover"
                   />
-                ) : (
-                  <div className="h-full w-full flex items-center justify-center text-sm font-medium text-stone-500">
-                    No profile image
-                  </div>
                 )}
               </div>
 

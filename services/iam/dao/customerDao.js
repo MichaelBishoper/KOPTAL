@@ -35,12 +35,15 @@ async function getCustomerByEmail(email) {
 
 // Update
 async function updateCustomer(id, customerData) {
-    const { name, email, phone, company, tax_id, billing_address, shipping_address } = customerData;
+    const { name, email, phone, company, tax_id, billing_address, shipping_address, image_url, image } = customerData;
+    const normalizedImage = image_url ?? image ?? null;
     const result = await client.query(
         `UPDATE customers
-        SET name = $1, email = $2, phone = $3, company = $4, tax_id = $5, billing_address = $6, shipping_address = $7
+        SET name = $1, email = $2, phone = $3, company = $4, tax_id = $5, billing_address = $6, shipping_address = $7,
+            image_url = COALESCE($9, image_url)
         WHERE customer_id = $8
-        RETURNING *`, [name, email, phone, company, tax_id, billing_address, shipping_address, id]
+        RETURNING *`,
+        [name, email, phone, company, tax_id, billing_address, shipping_address, id, normalizedImage || null]
     );
     return result.rows[0]; 
 }

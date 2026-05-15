@@ -9,6 +9,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: "Invalid registration payload" }, { status: 400 });
   }
 
+  const typedBody = body as { user_type?: string; location?: string };
+  if (typedBody.user_type === "tenant" && !String(typedBody.location ?? "").trim()) {
+    return NextResponse.json({ error: "Tenant location is required" }, { status: 400 });
+  }
+
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000);

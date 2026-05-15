@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { readImageFileAsDataUrl, saveUserProfileDraft } from "@/lib";
+import { saveUserProfileDraft } from "@/lib";
 import { AdminRow, CustomerRow, TenantRow } from "@/structure/db";
+import { uploadImageFileOnAPI } from "@/fetch/file-upload";
 
 type UserType = "customer" | "tenant" | "admin" | "guest";
 
@@ -51,6 +52,18 @@ export function UserProfile({ user, userType, onLogout, loggingOut }: UserProfil
   const [isEditing, setIsEditing] = useState(false);
   const [draft, setDraft] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [localPreviewImage, setLocalPreviewImage] = useState<string | null>(null);
+  const previewUrlRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (previewUrlRef.current) {
+        URL.revokeObjectURL(previewUrlRef.current);
+      }
+    };
+  }, []);
 
   if (!user) {
     return (
@@ -69,17 +82,39 @@ export function UserProfile({ user, userType, onLogout, loggingOut }: UserProfil
 
   const handleEdit = () => {
     setDraft({});
+    setSaveError(null);
     setIsEditing(true);
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setDraft((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    setSaveError(null);
   };
 
   const handleSave = async () => {
+    if (isUploadingImage) {
+      setSaveError("Please wait until image upload completes.");
+      return;
+    }
+
     setSaving(true);
+    setSaveError(null);
     try {
-      await saveUserProfileDraft(user, draft);
+      const roleHint =
+        userType === "tenant" || userType === "customer" || userType === "admin"
+          ? userType
+          : undefined;
+      const updatedUser = await saveUserProfileDraft(user, draft, roleHint);
+      if (!updatedUser) {
+        setSaveError("Failed to save profile. Please try again.");
+        return;
+      }
+
+      if (previewUrlRef.current) {
+        URL.revokeObjectURL(previewUrlRef.current);
+        previewUrlRef.current = null;
+      }
+      setLocalPreviewImage(null);
       setIsEditing(false);
     } finally {
       setSaving(false);
@@ -90,12 +125,45 @@ export function UserProfile({ user, userType, onLogout, loggingOut }: UserProfil
     const file = event.target.files?.[0];
     if (!file) return;
 
-    void readImageFileAsDataUrl(file)
-      .then((imageDataUrl) => {
-        setDraft((prev) => ({ ...prev, image: imageDataUrl }));
+    if (previewUrlRef.current) {
+      URL.revokeObjectURL(previewUrlRef.current);
+    }
+    const nextPreviewUrl = URL.createObjectURL(file);
+    previewUrlRef.current = nextPreviewUrl;
+    setLocalPreviewImage(nextPreviewUrl);
+
+    const userRecord2 = user as Record<string, unknown>;
+    let entityType = "user";
+    let entityId: number | null = null;
+
+    if (userType === "tenant") {
+      entityType = "tenant";
+      entityId = Number(userRecord2.tenant_id);
+    } else if (userType === "customer") {
+      entityType = "customer";
+      entityId = Number(userRecord2.customer_id);
+    } else if (userType === "admin") {
+      entityType = "admin";
+      entityId = Number(userRecord2.manager_id);
+    }
+
+    if (!entityId || !Number.isFinite(entityId)) {
+      event.currentTarget.value = "";
+      return;
+    }
+
+    setIsUploadingImage(true);
+    setSaveError(null);
+
+    void uploadImageFileOnAPI(file, entityType, entityId)
+      .then((uploadedUrl) => {
+        setDraft((prev) => ({ ...prev, image: uploadedUrl }));
       })
       .catch(() => {
-        // Keep current image if the upload cannot be read.
+        setSaveError("Image upload failed. Please try another file.");
+      })
+      .finally(() => {
+        setIsUploadingImage(false);
       });
 
     // Allow selecting the same file again.
@@ -103,12 +171,31 @@ export function UserProfile({ user, userType, onLogout, loggingOut }: UserProfil
   };
 
   const handleCancel = () => {
+    if (previewUrlRef.current) {
+      URL.revokeObjectURL(previewUrlRef.current);
+      previewUrlRef.current = null;
+    }
+    setLocalPreviewImage(null);
+    setSaveError(null);
+    setIsUploadingImage(false);
     setDraft({});
     setIsEditing(false);
   };
 
-  const storedProfileImage = "image" in user && typeof user.image === "string" ? user.image : undefined;
-  const profileImageSrc = (isEditing ? draft.image : undefined) || storedProfileImage || "/product-placeholder.jpg";
+  const userRecord = user as Record<string, unknown>;
+  const storedProfileImage =
+    (typeof userRecord.image === "string" && userRecord.image) ||
+    (typeof userRecord.image_url === "string" && userRecord.image_url) ||
+    undefined;
+  const profileImageSrc =
+    (isEditing ? localPreviewImage ?? draft.image : undefined) ||
+    storedProfileImage ||
+    "/product-placeholder.jpg";
+  const useNativePreviewImage =
+    profileImageSrc.startsWith("blob:") ||
+    profileImageSrc.startsWith("data:") ||
+    profileImageSrc.startsWith("http://localhost:3002/") ||
+    profileImageSrc.startsWith("http://127.0.0.1:3002/");
 
   return (
     <div className="bg-white rounded-lg p-8">
@@ -116,12 +203,20 @@ export function UserProfile({ user, userType, onLogout, loggingOut }: UserProfil
         {/* Left Side - Image */}
         <div className="flex flex-col items-center">
           <div className="relative w-60 h-60 mb-4">
-            <Image
-              src={profileImageSrc}
-              alt={user.name}
-              fill
-              className="object-cover rounded-full border-4 border-[#01A49E]"
-            />
+            {useNativePreviewImage ? (
+              <img
+                src={profileImageSrc}
+                alt={user.name}
+                className="h-full w-full object-cover rounded-full border-4 border-[#01A49E]"
+              />
+            ) : (
+              <Image
+                src={profileImageSrc}
+                alt={user.name}
+                fill
+                className="object-cover rounded-full border-4 border-[#01A49E]"
+              />
+            )}
           </div>
           {isEditing && (
             <label className="mb-3 inline-flex cursor-pointer items-center justify-center rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50">
@@ -154,10 +249,10 @@ export function UserProfile({ user, userType, onLogout, loggingOut }: UserProfil
                 </button>
                 <button
                   onClick={handleSave}
-                  disabled={saving}
+                  disabled={saving || isUploadingImage}
                   className="rounded-lg bg-[#01A49E] px-4 py-2 text-sm font-semibold text-white hover:bg-teal-700 transition-colors"
                 >
-                  {saving ? "Saving..." : "Save"}
+                  {isUploadingImage ? "Uploading image..." : saving ? "Saving..." : "Save"}
                 </button>
               </>
             ) : (
@@ -180,6 +275,12 @@ export function UserProfile({ user, userType, onLogout, loggingOut }: UserProfil
               </>
             )}
           </div>
+
+          {saveError ? (
+            <p className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700">
+              {saveError}
+            </p>
+          ) : null}
 
           {/* Basic Info */}
           <div className="grid grid-cols-2 gap-6">

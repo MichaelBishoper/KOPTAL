@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import ProductCartBox from "@/components/customer/product_cart_box";
-import { formatCurrency, getUnitLabel, toProductDetails, type TenantProductDetails } from "@/lib";
+import { formatCurrency, getUnitLabel, shouldUseNativeImage, toProductDetails, type TenantProductDetails } from "@/lib";
 
 interface ProductDetailsProps {
   product: TenantProductDetails;
@@ -19,6 +19,8 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
   const resolvedDescription = details.description ?? "No description has been added for this product yet.";
   const unitLabel = getUnitLabel(product.unit_id) === "Gram" ? "gram" : "piece";
   const categoryLabel = details.category?.trim() || "Uncategorized";
+  const tenantImageSrc = details.tenantImage ?? "/product-placeholder.jpg";
+  const useNativeTenantImage = shouldUseNativeImage(tenantImageSrc);
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
@@ -118,7 +120,6 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
           {/* Tenant Info */}
           <div>
             <div className="flex gap-4 items-start">
-              {/* Tenant Logo Placeholder */}
               <Link
                 href={{
                   pathname: "/customer/tennant",
@@ -127,9 +128,22 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
                     location: details.location,
                   },
                 }}
-                className="w-16 h-16 bg-gray-200 border-2 border-gray-400 rounded-lg flex items-center justify-center flex-shrink-0 hover:border-teal-600 transition-colors"
+                className="relative w-16 h-16 bg-gray-100 border-2 border-gray-300 rounded-lg overflow-hidden flex-shrink-0 hover:border-teal-600 transition-colors"
               >
-                <span className="text-xs font-semibold text-gray-600 text-center">Logo</span>
+                {useNativeTenantImage ? (
+                  <img
+                    src={tenantImageSrc}
+                    alt={details.tenantName ?? "Tenant"}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <Image
+                    src={tenantImageSrc}
+                    alt={details.tenantName ?? "Tenant"}
+                    fill
+                    className="object-cover"
+                  />
+                )}
               </Link>
 
               {/* Tenant Details */}
@@ -160,6 +174,7 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
           product={{
             ...details,
             image: images[0],
+            tenantImage: details.tenantImage,
             location: details.location,
           }}
         />

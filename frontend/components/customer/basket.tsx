@@ -5,12 +5,13 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { ChevronLeftIcon, TrashIcon } from "@heroicons/react/24/outline";
-import { formatCurrency, getAuthSession, getBasketItems, getTaxRate, getTenantById, removeBasketItem, type BasketItem } from "@/lib";
+import { formatCurrency, getAuthSession, getBasketItems, getTaxRate, getTenantById, getTenantProfileImage, removeBasketItem, shouldUseNativeImage, type BasketItem } from "@/lib";
 
 type BasketGroup = {
   tenantId: number;
   tenantName: string;
   tenantLocation: string;
+  tenantImage: string;
   items: BasketItem[];
 };
 
@@ -34,11 +35,13 @@ export default function Basket() {
 
     return Array.from(groups.entries()).map(([tenantId, groupItems]) => {
       const tenant = getTenantById(tenantId);
+      const firstItem = groupItems[0];
 
       return {
         tenantId,
-        tenantName: tenant?.name ?? `Tenant ${tenantId}`,
-        tenantLocation: tenant?.location ?? "West Java",
+        tenantName: firstItem?.tenant_name ?? tenant?.name ?? `Tenant ${tenantId}`,
+        tenantLocation: firstItem?.tenant_location ?? tenant?.location ?? "West Java",
+        tenantImage: firstItem?.tenant_image ?? getTenantProfileImage(tenant),
         items: groupItems,
       };
     });
@@ -122,14 +125,25 @@ export default function Basket() {
               const groupTotal = group.items.reduce((sum, item) => sum + item.subtotal, 0);
               const groupTax = Math.round(groupTotal * (taxRate / 100));
               const groupGrandTotal = groupTotal + groupTax;
+              const useNativeTenantImage = shouldUseNativeImage(group.tenantImage);
 
               return (
                 <div key={group.tenantId} className="rounded-3xl border border-gray-200 p-4 sm:p-5">
                   <div className="mb-4 flex items-start justify-between gap-4">
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-teal-700">Tenant</p>
-                      <h2 className="mt-1 text-xl font-bold text-gray-900">{group.tenantName}</h2>
-                      <p className="mt-1 text-sm text-gray-600">{group.tenantLocation}</p>
+                    <div className="flex items-start gap-4">
+                      <div className="relative h-16 w-16 overflow-hidden rounded-2xl border border-gray-200 bg-gray-100">
+                        {useNativeTenantImage ? (
+                          <img src={group.tenantImage} alt={group.tenantName} className="h-full w-full object-cover" />
+                        ) : (
+                          <Image src={group.tenantImage} alt={group.tenantName} fill className="object-cover" />
+                        )}
+                      </div>
+
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-teal-700">Tenant</p>
+                        <h2 className="mt-1 text-xl font-bold text-gray-900">{group.tenantName}</h2>
+                        <p className="mt-1 text-sm text-gray-600">{group.tenantLocation}</p>
+                      </div>
                     </div>
 
                     <div className="text-right">
