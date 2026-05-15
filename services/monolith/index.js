@@ -9,9 +9,13 @@ app.use(express.json());
 // routes
 const unitsRoutes = require('./src/routes/unitsRoutes');
 const productsRoutes = require('./src/routes/tenantProductsRoutes');
+const purchaseOrdersRoutes = require('./src/routes/purchaseOrdersRoutes');
+const lineItemsRoutes = require('./src/routes/lineItemsRoutes');
 
 app.use('/api/units', unitsRoutes);
 app.use('/api/products', productsRoutes);
+app.use('/api/purchaseOrders', purchaseOrdersRoutes);
+app.use('/api/lineItems', lineItemsRoutes);
 
 app.get('/health', (req, res) => res.json({ ok: true }));
 

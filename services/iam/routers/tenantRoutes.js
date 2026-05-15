@@ -7,7 +7,7 @@ const { AppError } = require('../middleware/errorHandler');
 
 router.get('/profile', verifyToken, async (req, res) => {
     try {
-        if (req.user.user_type !== 'tenant' || req.user.user_type !== 'admin') {
+        if (req.user.user_type !== 'tenant' && req.user.user_type !== 'admin') {
             return res.status(403).json({ error: 'Access denied.' });
         }
         
@@ -20,7 +20,7 @@ router.get('/profile', verifyToken, async (req, res) => {
 
 router.put('/password', verifyToken, async (req, res) => {
     try {
-        if (req.user.user_type !== 'tenant' || req.user.user_type !== 'admin') {
+        if (req.user.user_type !== 'tenant' && req.user.user_type !== 'admin') {
             return res.status(403).json({ error: 'Access denied.' });
         }
         

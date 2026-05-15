@@ -100,6 +100,64 @@ This service currently does NOT validate entity existence. Responsibility is del
 Files are stored in /app/src/uploads/
 
 ## IAM
+Inside `/services/iam`, create a `.env` file with these values (example):
+```
+PORT=3000
+PG_HOST=localhost
+PG_PORT=5432
+PG_USER=postgres
+PG_PASSWORD=password123
+PG_DATABASE=koptal
+JWT_SECRET=some_test_secret
+```
+
+### Running service locally
+```
+cd services/iam
+npm install
+node server.js
+```
+
+### API Endpoints
+#### Public Routes
+**POST /api/auth/register**
+
+Json Body:
+```json
+{
+    "user_type": "tenant",
+    "name": "Jethro Tolol",
+    "email": "jethro.email",
+    "phone": "67",
+    "password": "password"
+}
+```
+Expected Response:
+```json
+{
+    "message": "tenant created successfully"
+}
+```
+
+**POST /api/auth/login**
+
+Json Body:
+```json
+{
+    "user_type": "tenant",
+    "name": "Jethro Tolol",
+    "email": "jethro.email",
+    "phone": "67",
+    "password": "password"
+}
+```
+Expected Response:
+```json
+{
+    "token": "secret_token",
+    "user_type": "tenant"
+}
+```
 
 ## monolith
 
