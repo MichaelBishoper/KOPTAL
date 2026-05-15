@@ -1,52 +1,56 @@
 import type { AdminRow, CustomerRow, TenantRow } from "@/structure/db";
-import { getAdmins } from "./admins";
-import { getCustomers } from "./customers";
-import { getTenants } from "./tenants";
-
-// API migration scaffold (users/profile):
-// 1) Replace `getUserByRoleAndId` lookups with GET `/api/users/:role/:id`.
-// 2) Replace `saveUserProfileDraft` local merge with PATCH `/api/users/:role/:id`.
-// 3) Keep function signatures stable so components do not need changes.
 
 export type EditableUserRow = AdminRow | CustomerRow | TenantRow;
 export type UserLookupRole = "customer" | "tenant" | "admin";
 
-// Keep a narrow allow-list so UI draft fields cannot overwrite immutable identity fields.
-const EDITABLE_FIELDS = new Set([
-  "name",
-  "email",
-  "phone",
-  "company",
-  "billing_address",
-  "shipping_address",
-  "location",
-  "image",
-]);
+const PROFILE_PATH: Record<UserLookupRole, string> = {
+  customer: "/api/iam/customers/profile",
+  tenant: "/api/iam/tenants/profile",
+  admin: "/api/iam/admins/profile",
+};
 
-export function saveUserProfileDraft<TUser extends EditableUserRow>(
+export async function saveUserProfileDraft<TUser extends EditableUserRow>(
   user: TUser,
   draft: Record<string, string>,
-): TUser {
-  const nextValues: Record<string, string> = {};
+): Promise<TUser | null> {
+  const role: UserLookupRole = "customer_id" in user ? "customer" : "tenant_id" in user ? "tenant" : "admin";
 
-  for (const [key, value] of Object.entries(draft)) {
-    if (EDITABLE_FIELDS.has(key)) {
-      nextValues[key] = value;
+  try {
+    const res = await fetch(PROFILE_PATH[role], {
+      method: "PUT",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(draft),
+    });
+
+    if (!res.ok) {
+      return null;
     }
-  }
 
-  Object.assign(user, nextValues);
-  return user;
+    const updated = (await res.json()) as TUser;
+    Object.assign(user, updated);
+    return user;
+  } catch {
+    return null;
+  }
 }
 
-export function getUserByRoleAndId(role: UserLookupRole, userId: number): EditableUserRow | null {
-  if (role === "customer") {
-    return getCustomers().find((entry) => entry.customer_id === userId) ?? null;
-  }
+export async function getUserByRoleAndId(role: UserLookupRole, _userId: number): Promise<EditableUserRow | null> {
+  try {
+    const res = await fetch(PROFILE_PATH[role], {
+      credentials: "include",
+      cache: "no-store",
+    });
 
-  if (role === "tenant") {
-    return getTenants().find((entry) => entry.tenant_id === userId) ?? null;
-  }
+    if (!res.ok) {
+      return null;
+    }
 
-  return getAdmins().find((entry) => entry.manager_id === userId) ?? null;
+    return (await res.json()) as EditableUserRow;
+  } catch {
+    return null;
+  }
 }

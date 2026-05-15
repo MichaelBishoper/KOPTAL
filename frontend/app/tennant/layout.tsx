@@ -8,7 +8,8 @@ export default async function TennantLayout({
   children: React.ReactNode;
 }>) {
   const cookieStore = await cookies();
-  const role = normalizeRoleValue(cookieStore.get("koptal_role")?.value);
+  const token = cookieStore.get("koptal_token")?.value;
+  const role = token ? normalizeRoleValue(cookieStore.get("koptal_role")?.value) : "guest";
 
   if (role !== "tennant") {
     redirect("/login");

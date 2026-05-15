@@ -71,6 +71,15 @@ export function getBasketItems(): BasketItem[] {
 }
 
 export function addBasketItem(product: TenantProductRow, quantity: number): BasketItem {
+  const availableStock = Number(product.quantity);
+  if (!Number.isFinite(availableStock) || availableStock <= 0) {
+    throw new Error("Product is out of stock");
+  }
+
+  if (!Number.isFinite(quantity) || quantity <= 0) {
+    throw new Error("Quantity must be greater than zero");
+  }
+
   const payload = buildBasketSavePayload(product, quantity);
   const currentItems = readBasketItems();
   const existingIndex = currentItems.findIndex((item) => item.product_id === payload.product_id);
@@ -81,14 +90,23 @@ export function addBasketItem(product: TenantProductRow, quantity: number): Bask
   };
 
   if (existingIndex >= 0) {
+    const nextQuantity = currentItems[existingIndex].quantity + quantity;
+    if (nextQuantity > availableStock) {
+      throw new Error("Requested quantity exceeds available stock");
+    }
+
     currentItems[existingIndex] = {
       ...currentItems[existingIndex],
       ...nextItem,
-      quantity: currentItems[existingIndex].quantity + quantity,
-      subtotal: Math.round(payload.price * (currentItems[existingIndex].quantity + quantity)),
+      quantity: nextQuantity,
+      subtotal: Math.round(payload.price * nextQuantity),
     };
     writeBasketItems(currentItems);
     return currentItems[existingIndex];
+  }
+
+  if (quantity > availableStock) {
+    throw new Error("Requested quantity exceeds available stock");
   }
 
   const updatedItems = [...currentItems, nextItem];

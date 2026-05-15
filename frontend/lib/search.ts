@@ -62,7 +62,7 @@ export function searchProductsAndCategories(query: string): SearchResult[] {
         price: product.price,
         productId: String(product.product_id),
         tenantName: tenant?.name ?? "Unknown Tenant",
-        location: tenant?.location ?? "West Java",
+        location: tenant?.location ?? "",
       });
     }
   });

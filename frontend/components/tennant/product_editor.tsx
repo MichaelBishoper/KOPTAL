@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ChevronLeftIcon } from "@heroicons/react/24/outline";
@@ -10,6 +10,7 @@ import {
   formatCurrency,
   getAdminCategories,
   hasApprovedCategory,
+  loadAdminSettings,
   readImageFileAsDataUrl,
   saveTenantProductDraft,
 } from "@/lib";
@@ -29,7 +30,14 @@ export default function ProductEditor({ mode, initialProduct }: ProductEditorPro
   );
   const [savedMessage, setSavedMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const categoryOptions = getAdminCategories();
+  const [categoryOptions, setCategoryOptions] = useState<string[]>(() => getAdminCategories());
+
+  useEffect(() => {
+    void (async () => {
+      const settings = await loadAdminSettings();
+      setCategoryOptions(settings.categories);
+    })();
+  }, []);
 
   const updateField = <K extends keyof ProductDraft>(field: K, value: ProductDraft[K]) => {
     setDraft((currentDraft) => ({ ...currentDraft, [field]: value }));
@@ -67,13 +75,16 @@ export default function ProductEditor({ mode, initialProduct }: ProductEditorPro
       return;
     }
 
-    const payload = saveTenantProductDraft(draft, initialProduct);
-    void payload.then((savedPayload) => {
-      console.log("Saving tenant product", savedPayload);
-    });
+    void saveTenantProductDraft(draft, initialProduct).then((savedProduct) => {
+      if (!savedProduct) {
+        setSavedMessage(null);
+        setErrorMessage("Failed to save product. Please try again.");
+        return;
+      }
 
-    setErrorMessage(null);
-    setSavedMessage(mode === "add" ? "Product created locally." : "Product updated locally.");
+      setErrorMessage(null);
+      setSavedMessage(mode === "add" ? "Product created successfully." : "Product updated successfully.");
+    });
   };
 
   return (

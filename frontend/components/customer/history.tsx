@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -11,50 +11,104 @@ import {
   getStatusLabel,
   getTaxRate,
   isAcceptedOrderStatus,
+  loadPurchaseOrders,
 } from "@/lib";
+import { updatePurchaseOrderStatusOnAPI } from "@/fetch/purchase-orders";
 
 export default function History() {
+  const [ordersVersion, setOrdersVersion] = useState(0);
+  const [updatingHistoryId, setUpdatingHistoryId] = useState<string | null>(null);
+  const [statusError, setStatusError] = useState<string | null>(null);
+
+  useEffect(() => {
+    void (async () => {
+      await loadPurchaseOrders();
+      setOrdersVersion((current) => current + 1);
+    })();
+  }, []);
+
   const taxRate = getTaxRate();
 
-  const histories = getPurchaseOrders().map((po) => ({
-    id: po.id,
-    poId: po.po_id,
-    tenantImage: po.items[0]?.image ?? "/product-placeholder.jpg",
-    tenantName: po.name,
-    date: formatOrderDate(po.order_date),
-    shippingAddress: po.shipping_address,
-    status: po.status,
-    subtotal: po.subtotal,
-    taxAmount: Math.round(po.subtotal * (taxRate / 100)),
-    totalAmount: po.subtotal + Math.round(po.subtotal * (taxRate / 100)),
-    products: po.items,
-  }));
+  const histories = useMemo(
+    () =>
+      getPurchaseOrders().map((po) => ({
+        id: po.id,
+        poId: po.po_id,
+        tenantImage: po.items[0]?.image ?? "/product-placeholder.jpg",
+        tenantName: po.name,
+        date: formatOrderDate(po.order_date),
+        shippingAddress: po.shipping_address,
+        status: po.status,
+        subtotal: po.subtotal,
+        taxAmount: Math.round(po.subtotal * (taxRate / 100)),
+        totalAmount: po.subtotal + Math.round(po.subtotal * (taxRate / 100)),
+        products: po.items,
+      })),
+    [ordersVersion, taxRate],
+  );
 
   const [openHistoryId, setOpenHistoryId] = useState(histories[0]?.id ?? "");
   const [statusById, setStatusById] = useState<Record<string, string>>(
     () => Object.fromEntries(histories.map((history) => [history.id, history.status])),
   );
 
-  const markAsDelivered = (historyId: string) => {
-    setStatusById((current) => {
-      const currentStatus = (current[historyId] ?? "").toLowerCase();
-      if (currentStatus !== "ontheway") return current;
+  useEffect(() => {
+    setStatusById(Object.fromEntries(histories.map((history) => [history.id, history.status])));
 
-      return {
+    if (!openHistoryId && histories[0]?.id) {
+      setOpenHistoryId(histories[0].id);
+    }
+  }, [histories, openHistoryId]);
+
+  const markAsDelivered = async (historyId: string, poId: number) => {
+    if (updatingHistoryId) return;
+
+    setStatusError(null);
+
+    const currentStatus = (statusById[historyId] ?? "").toLowerCase();
+    if (!['ontheway', 'shipped', 'confirmed'].includes(currentStatus)) return;
+
+    setUpdatingHistoryId(historyId);
+    try {
+      const updated = await updatePurchaseOrderStatusOnAPI(poId, "delivered");
+
+      if (!updated) {
+        setStatusError("Failed to update status to delivered. Please try again.");
+        return;
+      }
+
+      setStatusById((current) => ({
         ...current,
-        [historyId]: "Delivered",
-      };
-    });
+        [historyId]: updated.status,
+      }));
+
+      await loadPurchaseOrders();
+      setOrdersVersion((current) => current + 1);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to update status to delivered.";
+      setStatusError(message);
+      if (typeof window !== "undefined") {
+        console.error(message);
+      }
+    } finally {
+      setUpdatingHistoryId(null);
+    }
   };
 
   return (
     <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      {statusError && (
+        <div className="mb-4 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
+          {statusError}
+        </div>
+      )}
+
       <div className="flex flex-col gap-4">
         {histories.map((history) => {
           const isOpen = openHistoryId === history.id;
           const currentStatus = statusById[history.id] ?? history.status;
-          const isDelivered = currentStatus === "Delivered";
           const normalizedStatus = currentStatus.toLowerCase();
+          const isDelivered = normalizedStatus === "delivered";
           const isAccepted = isAcceptedOrderStatus(currentStatus);
           const canShowDeliveryStatus = normalizedStatus !== "cancelled";
 
@@ -133,11 +187,17 @@ export default function History() {
 
                         <button
                           type="button"
-                          onClick={() => markAsDelivered(history.id)}
-                          disabled={isDelivered || !isAccepted}
+                            onClick={() => void markAsDelivered(history.id, history.poId)}
+                            disabled={isDelivered || !isAccepted || updatingHistoryId === history.id}
                           className="rounded-lg px-4 py-2 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-500 bg-teal-600 text-white hover:bg-teal-700"
                         >
-                          {isDelivered ? "Locked" : isAccepted ? "Mark Delivered" : "Waiting Acceptance"}
+                            {updatingHistoryId === history.id
+                              ? "Updating..."
+                              : isDelivered
+                                ? "Locked"
+                                : isAccepted
+                                  ? "Mark Delivered"
+                                  : "Waiting Acceptance"}
                         </button>
                       </div>
                     )}

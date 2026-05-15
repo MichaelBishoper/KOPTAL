@@ -1,13 +1,33 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { formatCurrency, getPurchaseOrders, type PurchaseOrder } from "@/lib";
 
 export default function PO_Details() {
   const purchaseOrders = getPurchaseOrders();
-  const [selectedPO, setSelectedPO] = useState(purchaseOrders[0]);
-  const [items, setItems] = useState(selectedPO.items);
+  const [selectedPO, setSelectedPO] = useState<PurchaseOrder | null>(purchaseOrders[0] ?? null);
+  const [items, setItems] = useState((purchaseOrders[0]?.items ?? []));
+
+  useEffect(() => {
+    if (!purchaseOrders.length) {
+      setSelectedPO(null);
+      setItems([]);
+      return;
+    }
+
+    if (!selectedPO) {
+      setSelectedPO(purchaseOrders[0]);
+      setItems(purchaseOrders[0].items);
+      return;
+    }
+
+    const refreshed = purchaseOrders.find((entry) => entry.po_id === selectedPO.po_id);
+    if (refreshed) {
+      setSelectedPO(refreshed);
+      setItems(refreshed.items);
+    }
+  }, [purchaseOrders, selectedPO]);
 
   const selectPurchaseOrder = (purchaseOrder: PurchaseOrder) => {
     setSelectedPO(purchaseOrder);
@@ -25,6 +45,16 @@ export default function PO_Details() {
   };
 
   const totalPrice = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
+  if (!purchaseOrders.length || !selectedPO) {
+    return (
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="border-2 border-gray-300 rounded-xl bg-white p-6 text-sm text-gray-600">
+          No purchase orders available.
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">

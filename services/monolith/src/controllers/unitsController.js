@@ -1,11 +1,17 @@
 const Units = require('../dao/unitsDao');
 const { AppError } = require('../../middleware/errorHandler');
 
+let unitsListCache = [];
+
 async function listUnits(req, res, next) {
   try {
     const rows = await Units.getAllUnits();
+    unitsListCache = Array.isArray(rows) ? rows : [];
     res.json({ success: true, data: rows });
-  } catch (err) { next(err); }
+  } catch {
+    // Keep public catalog endpoints available even when DB is temporarily unavailable.
+    res.json({ success: true, data: unitsListCache });
+  }
 }
 
 async function getUnit(req, res, next) {

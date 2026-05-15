@@ -1,13 +1,16 @@
 "use client";
 
-import { getTaxRate } from "@/lib";
+import { getTaxRate, loadAdminSettings } from "@/lib";
 import { useState, useEffect } from "react";
 
 export function TaxSettings() {
   const [taxRate, setTaxRate] = useState<number>(11);
 
   useEffect(() => {
-    setTaxRate(getTaxRate());
+    void (async () => {
+      await loadAdminSettings();
+      setTaxRate(getTaxRate());
+    })();
   }, []);
 
   return (

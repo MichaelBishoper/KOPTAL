@@ -20,7 +20,7 @@ export default function Catalog({ products = [], columns = 4, searchQuery = "" }
     baseProducts = filteredRows.map(toCatalogCard);
   }
 
-  const displayProducts = baseProducts;
+  const displayProducts = baseProducts.filter((product) => Number(product.quantity) > 0);
 
   return (
     <div className="w-full py-8">

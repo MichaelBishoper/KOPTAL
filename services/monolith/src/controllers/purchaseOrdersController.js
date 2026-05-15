@@ -81,21 +81,51 @@ async function getTenantOrders(req, res, next) {
 // Update order status (tenant only)
 async function updateOrderStatus(req, res, next) {
     try {
-        if (req.user.user_type !== 'tenant') {
-            throw new AppError('Only tenants can update order status', 403);
-        }
-        
         const order = await PO.getPurchaseOrderById(req.params.id);
         
         if (!order) {
             throw new AppError('Order not found', 404);
         }
-        
-        if (order.tenant_id !== req.user.user_id) {
-            throw new AppError('This order belongs to another tenant', 403);
+
+        const requestedStatus = String(req.body.status || '').toLowerCase();
+        if (!requestedStatus) {
+            throw new AppError('Status is required', 400);
         }
-        
-        const updated = await PO.updateOrderStatus(req.params.id, req.body.status);
+
+        if (req.user.user_type === 'tenant') {
+            if (order.tenant_id !== req.user.user_id) {
+                throw new AppError('This order belongs to another tenant', 403);
+            }
+
+            if (!['shipped', 'cancelled', 'confirmed'].includes(requestedStatus)) {
+                throw new AppError('Tenants can only set status to shipped, confirmed, or cancelled', 400);
+            }
+
+            if (String(order.status).toLowerCase() === 'delivered') {
+                throw new AppError('Delivered order is locked', 400);
+            }
+        } else if (req.user.user_type === 'customer') {
+            if (order.customer_id !== req.user.user_id) {
+                throw new AppError('This order belongs to another customer', 403);
+            }
+
+            if (requestedStatus !== 'delivered') {
+                throw new AppError('Customers can only set status to delivered', 400);
+            }
+
+            const currentStatus = String(order.status).toLowerCase();
+            if (currentStatus === 'cancelled') {
+                throw new AppError('Cancelled order cannot be marked delivered', 400);
+            }
+
+            if (currentStatus === 'delivered') {
+                throw new AppError('Order is already delivered', 400);
+            }
+        } else {
+            throw new AppError('Only tenants or customers can update order status', 403);
+        }
+
+        const updated = await PO.updateOrderStatus(req.params.id, requestedStatus);
         res.json(updated);
     } catch (error) {
         next(error);

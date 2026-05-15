@@ -1,11 +1,11 @@
 const express = require('express')
 const router = express.Router();
 const { verifyToken } = require('../middleware/auth');
-const { getTenantById, updatePassword } = require('../dao/tenantDao');
+const { getTenantById, updatePassword, updateTenant } = require('../dao/tenantDao');
 const { comparePassword, hashPassword } = require('../utils/hashPasswords');
 const { AppError } = require('../middleware/errorHandler');
 
-router.get('/profile', verifyToken, async (req, res) => {
+router.get('/profile', verifyToken, async (req, res, next) => {
     try {
         if (req.user.user_type !== 'tenant' && req.user.user_type !== 'admin') {
             return res.status(403).json({ error: 'Access denied.' });
@@ -18,7 +18,7 @@ router.get('/profile', verifyToken, async (req, res) => {
     }
 });
 
-router.put('/password', verifyToken, async (req, res) => {
+router.put('/password', verifyToken, async (req, res, next) => {
     try {
         if (req.user.user_type !== 'tenant' && req.user.user_type !== 'admin') {
             return res.status(403).json({ error: 'Access denied.' });

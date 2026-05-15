@@ -1,5 +1,4 @@
 import type { BasketItem } from "../editor/basket";
-import { getCustomerShippingAddressById } from "./customers";
 
 export type PaymentMethod = "qris" | "creditcard" | "transfer" | "ewallet";
 export type AddressMode = "saved" | "custom";
@@ -61,11 +60,23 @@ export function getCheckoutSubtotal({
   return basketItems.reduce((sum, item) => sum + item.subtotal, 0);
 }
 
-export function resolveSavedShippingAddress(
+export async function resolveSavedShippingAddress(
   customerId: number | null,
-): string {
+): Promise<string> {
   if (customerId === null) return "";
-  return getCustomerShippingAddressById(customerId);
+
+  try {
+    const res = await fetch("/api/iam/customers/profile", {
+      credentials: "include",
+      cache: "no-store",
+    });
+    if (!res.ok) return "";
+
+    const profile = (await res.json()) as { shipping_address?: string };
+    return profile.shipping_address ?? "";
+  } catch {
+    return "";
+  }
 }
 
 export function getCheckoutPaymentInstructions(method: PaymentMethod, amountLabel: string): string[] {

@@ -1,13 +1,21 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { getAdminCategories, getTenantProducts, saveAdminCategories } from "@/lib";
+import { useEffect, useMemo, useState } from "react";
+import { getAdminCategories, getTenantProducts, loadAdminSettings, saveAdminCategories } from "@/lib";
 import { TaxSettings } from "./TaxSettings";
 
 export default function AdminDashboardComponent() {
   const [categories, setCategories] = useState<string[]>(() => getAdminCategories());
   const [newCategory, setNewCategory] = useState("");
   const [message, setMessage] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    void (async () => {
+      const settings = await loadAdminSettings();
+      setCategories(settings.categories);
+    })();
+  }, []);
 
   const productCountByCategory = useMemo(() => {
     const counter = new Map<string, number>();
@@ -19,7 +27,7 @@ export default function AdminDashboardComponent() {
     return counter;
   }, []);
 
-  const addCategory = () => {
+  const addCategory = async () => {
     const normalized = newCategory.trim();
     if (!normalized) {
       setMessage("Category name cannot be empty.");
@@ -31,19 +39,25 @@ export default function AdminDashboardComponent() {
       return;
     }
 
-    setCategories((current) => saveAdminCategories([...current, normalized]));
+    setIsSaving(true);
+    const nextCategories = await saveAdminCategories([...categories, normalized]);
+    setCategories(nextCategories);
+    setIsSaving(false);
     setNewCategory("");
     setMessage(`Category \"${normalized}\" added.`);
   };
 
-  const removeCategory = (categoryName: string) => {
+  const removeCategory = async (categoryName: string) => {
     const usedByCount = productCountByCategory.get(categoryName) ?? 0;
     if (usedByCount > 0) {
       setMessage(`Cannot remove \"${categoryName}\" because ${usedByCount} product(s) still use it.`);
       return;
     }
 
-    setCategories((current) => saveAdminCategories(current.filter((category) => category !== categoryName)));
+    setIsSaving(true);
+    const nextCategories = await saveAdminCategories(categories.filter((category) => category !== categoryName));
+    setCategories(nextCategories);
+    setIsSaving(false);
     setMessage(`Category \"${categoryName}\" removed.`);
   };
 
@@ -78,9 +92,10 @@ export default function AdminDashboardComponent() {
                 <button
                   type="button"
                   onClick={addCategory}
+                  disabled={isSaving}
                   className="rounded-xl bg-teal-600 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-700"
                 >
-                  +
+                  {isSaving ? "..." : "+"}
                 </button>
               </div>
             </div>

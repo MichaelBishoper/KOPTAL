@@ -2,11 +2,11 @@ const client = require('../db')
 
 // Create
 async function createTenant(tenantData) {
-    const { name, email, phone, password_hash } = tenantData;
+    const { name, email, phone, password_hash, location, image_url } = tenantData;
     const result = await client.query(
-        `INSERT INTO tenants (name, email, phone, password_hash)
-        VALUES ($1, $2, $3, $4)
-        RETURNING *`, [name, email, phone, password_hash]
+        `INSERT INTO tenants (name, email, phone, password_hash, location, image_url)
+        VALUES ($1, $2, $3, $4, $5, $6)
+        RETURNING *`, [name, email, phone, password_hash, location ?? null, image_url ?? null]
     );
     return result.rows[0];
 }

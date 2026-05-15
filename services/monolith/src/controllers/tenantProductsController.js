@@ -1,11 +1,17 @@
 const Products = require('../dao/tenantProductsDao');
 const { AppError } = require('../../middleware/errorHandler');
 
+let productsListCache = [];
+
 async function listProducts(req, res, next) {
   try {
     const rows = await Products.getAllProducts();
+    productsListCache = Array.isArray(rows) ? rows : [];
     res.json({ success: true, data: rows });
-  } catch (err) { next(err); }
+  } catch {
+    // Keep public catalog endpoints available even when DB is temporarily unavailable.
+    res.json({ success: true, data: productsListCache });
+  }
 }
 
 async function getProduct(req, res, next) {
@@ -21,7 +27,7 @@ async function createProduct(req, res, next) {
   try {
     const payload = Object.assign({}, req.body);
     // If token contains tenant_id, enforce tenant scoping
-    const tokenTenant = req.user && req.user.tenant_id;
+    const tokenTenant = req.user && (req.user.tenant_id || (req.user.user_type === 'tenant' ? req.user.user_id : null));
     if (tokenTenant) {
       // allow omitting tenant_id in payload and fill it from token
       if (!payload.tenant_id) payload.tenant_id = tokenTenant;
@@ -44,7 +50,7 @@ async function updateProduct(req, res, next) {
     const existing = await Products.getProductById(id);
     if (!existing) return next(new AppError('Product not found', 404));
 
-    const tokenTenant = req.user && req.user.tenant_id;
+    const tokenTenant = req.user && (req.user.tenant_id || (req.user.user_type === 'tenant' ? req.user.user_id : null));
     if (tokenTenant) {
       if (Number(existing.tenant_id) !== Number(tokenTenant)) {
         return next(new AppError('Forbidden: tenant mismatch', 403));
@@ -69,7 +75,7 @@ async function removeProduct(req, res, next) {
     const existing = await Products.getProductById(id);
     if (!existing) return next(new AppError('Product not found', 404));
 
-    const tokenTenant = req.user && req.user.tenant_id;
+    const tokenTenant = req.user && (req.user.tenant_id || (req.user.user_type === 'tenant' ? req.user.user_id : null));
     if (tokenTenant && Number(existing.tenant_id) !== Number(tokenTenant)) {
       return next(new AppError('Forbidden: tenant mismatch', 403));
     }

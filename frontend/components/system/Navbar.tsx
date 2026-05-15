@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import SearchBar from "./SearchBar";
-import { readAuthSessionFromCookies, type AppRole } from "@/lib";
+import { getAuthSession, type AppRole } from "@/lib";
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -13,19 +13,29 @@ export default function Navbar() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
   const [role, setRole] = useState<AppRole>("guest");
+  const [userName, setUserName] = useState<string | null>(null);
   const pagesRef = useRef<HTMLDivElement | null>(null);
   const contactRef = useRef<HTMLDivElement | null>(null);
+  const effectiveRole: AppRole = role === "guest" ? "customer" : role;
+  const avatarLetter = userName ? userName.trim()[0].toUpperCase() : (role === "guest" ? "?" : "U");
 
   const isHomeActive = pathname === "/" || pathname === "/home";
 
   function pagesItems() {
-    if (role === "admin") {
+    if (role === "guest") {
+      return [
+        { label: "Marketplace", href: "/customer/marketplace" },
+        { label: "Basket", href: "/customer/basket" },
+      ];
+    }
+
+    if (effectiveRole === "admin") {
       return [
         { label: "Admin Dashboard", href: "/admin/a_dashboard" },
       ];
     }
 
-    if (role === "tennant") {
+    if (effectiveRole === "tennant") {
       return [
         { label: "T Dashboard", href: "/tennant/t_dashboard" },
         { label: "Add Product", href: "/tennant/product_add" },
@@ -33,7 +43,7 @@ export default function Navbar() {
       ];
     }
 
-    if (role === "customer") {
+    if (effectiveRole === "customer") {
       return [
         { label: "Marketplace", href: "/customer/marketplace" },
         { label: "Basket", href: "/customer/basket" },
@@ -49,7 +59,11 @@ export default function Navbar() {
   const isPagesActive = pagesItems().some((item) => pathname.startsWith(item.href));
 
   useEffect(() => {
-    setRole(readAuthSessionFromCookies().role);
+    void (async () => {
+      const session = await getAuthSession();
+      setRole(session.role);
+      setUserName(session.name ?? null);
+    })();
 
     function onDoc(e: MouseEvent) {
       if (!(e.target instanceof Node)) return;
@@ -66,7 +80,11 @@ export default function Navbar() {
   }, []);
 
   useEffect(() => {
-    setRole(readAuthSessionFromCookies().role);
+    void (async () => {
+      const session = await getAuthSession();
+      setRole(session.role);
+      setUserName(session.name ?? null);
+    })();
   }, [pathname]);
 
   // No dynamic icon import here to avoid build-time module-resolution errors.
@@ -155,21 +173,26 @@ export default function Navbar() {
             <div className="absolute right-20 top-1/2 -translate-y-1/2 flex items-center gap-6 z-20">
               <div className="text-right hidden md:block">
                 <div className="text-xs text-gray-500">WELCOME</div>
-                <Link href="/login" className="text-sm font-semibold text-black hover:underline">
-                  LOG IN / REGISTER
-                </Link>
+                {role === "guest" ? (
+                  <Link href="/login" className="text-sm font-semibold text-black hover:underline">
+                    LOG IN / REGISTER
+                  </Link>
+                ) : (
+                  <Link href="/user" className="text-sm font-semibold text-black hover:underline">
+                    {userName ?? "Account"}
+                  </Link>
+                )}
               </div>
 
-              <Link href="/user" className="relative" aria-label="Go to user profile">
-                <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-xs hover:bg-gray-200 transition">U</div>
-                <span className="absolute -top-1 -right-2 bg-[#01A49E] text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">5</span>
+              <Link href="/user" className="relative inline-flex items-center justify-center w-10 h-10" aria-label="Go to user profile">
+                <div className="w-10 h-10 bg-[#01A49E] rounded-full flex items-center justify-center text-sm font-bold text-white hover:bg-teal-600 transition">{avatarLetter}</div>
               </Link>
             </div>
           </div>
         </div>
       </div>
 
-      {(role === "admin" || role === "tennant") ? (
+      {(effectiveRole === "admin" || effectiveRole === "tennant") ? (
         <div className="h-10 bg-[#01A49E]" />
       ) : (
         <div className="bg-[#01A49E]">

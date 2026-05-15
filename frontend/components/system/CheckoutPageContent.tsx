@@ -1,23 +1,28 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   calculateOrderTotal,
   CHECKOUT_PAYMENT_METHODS,
+  clearBasketItems,
   formatCurrency,
+  getAuthSession,
   getBasketItems,
   getCheckoutPaymentInstructions,
   getCheckoutSubtotal,
   getTaxRate,
-  readAuthSessionFromCookies,
+  loadPurchaseOrders,
+  removeBasketTenantItems,
   resolveSavedShippingAddress,
   type AddressMode,
   type PaymentMethod,
 } from "@/lib";
+import { createLineItemOnAPI, createPurchaseOrderOnAPI } from "@/fetch/purchase-orders";
 
 export default function CheckoutPageContent() {
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(null);
   const [addressMode, setAddressMode] = useState<AddressMode>("saved");
@@ -25,6 +30,7 @@ export default function CheckoutPageContent() {
   const [customAddress, setCustomAddress] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
 
   const tenantIdParam = searchParams.get("tenantId");
   const subtotalParam = Number(searchParams.get("subtotal"));
@@ -42,15 +48,25 @@ export default function CheckoutPageContent() {
   const formattedOrderTotal = formatCurrency(orderTotal);
 
   useEffect(() => {
-    const session = readAuthSessionFromCookies();
-    if (session.role !== "customer" || session.userId === null) {
-      setSavedShippingAddress("");
-      return;
-    }
+    void (async () => {
+      const session = await getAuthSession();
 
-    const address = resolveSavedShippingAddress(session.userId);
-    setSavedShippingAddress(address);
-  }, []);
+      if (session.role === "guest") {
+        const currentQuery = searchParams.toString();
+        const nextPath = currentQuery ? `${pathname}?${currentQuery}` : pathname;
+        router.replace(`/login?next=${encodeURIComponent(nextPath)}&reason=checkout-required`);
+        return;
+      }
+
+      if (session.role !== "customer" || session.userId === null) {
+        setSavedShippingAddress("");
+        return;
+      }
+
+      const address = await resolveSavedShippingAddress(session.userId);
+      setSavedShippingAddress(address);
+    })();
+  }, [pathname, router, searchParams]);
 
   useEffect(() => {
     if (!savedShippingAddress) setAddressMode("custom");
@@ -60,6 +76,8 @@ export default function CheckoutPageContent() {
   const hasValidShippingAddress = shippingAddress.length > 0;
 
   const handlePayment = async () => {
+    setPaymentError(null);
+
     if (!paymentMethod) {
       alert("Please select a payment method");
       return;
@@ -70,16 +88,81 @@ export default function CheckoutPageContent() {
       return;
     }
 
+    const session = await getAuthSession();
+    if (session.role !== "customer") {
+      setPaymentError("Only customer accounts can complete checkout.");
+      return;
+    }
+
+    const checkoutItems = tenantIdParam
+      ? basketItems.filter((item) => item.tenant_id === Number(tenantIdParam))
+      : basketItems;
+
+    if (checkoutItems.length === 0) {
+      setPaymentError("No checkout items found.");
+      return;
+    }
+
+    const groupedByTenant = new Map<number, typeof checkoutItems>();
+    for (const item of checkoutItems) {
+      const existing = groupedByTenant.get(item.tenant_id) ?? [];
+      groupedByTenant.set(item.tenant_id, [...existing, item]);
+    }
+
     setIsProcessing(true);
 
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    try {
+      const purchasedTenantIds: number[] = [];
 
-    setIsProcessing(false);
-    setIsComplete(true);
+      for (const [tenantId, tenantItems] of groupedByTenant.entries()) {
+        const createdOrder = await createPurchaseOrderOnAPI({
+          tenant_id: tenantId,
+          shipping_address: shippingAddress,
+          notes: `Payment method: ${paymentMethod}`,
+        });
 
-    setTimeout(() => {
-      router.push("/customer/c_transaction");
-    }, 3000);
+        if (!createdOrder) {
+          throw new Error(`Failed to create purchase order for tenant ${tenantId}`);
+        }
+
+        for (const item of tenantItems) {
+          const createdItem = await createLineItemOnAPI({
+            po_id: createdOrder.po_id,
+            product_id: item.product_id,
+            quantity: item.quantity,
+            unit_price: item.price,
+          });
+
+          if (!createdItem) {
+            throw new Error(`Failed to create line item for product ${item.product_id}`);
+          }
+        }
+
+        purchasedTenantIds.push(tenantId);
+      }
+
+      if (tenantIdParam) {
+        removeBasketTenantItems(Number(tenantIdParam));
+      } else if (purchasedTenantIds.length > 0) {
+        for (const tenantId of purchasedTenantIds) {
+          removeBasketTenantItems(tenantId);
+        }
+      } else {
+        clearBasketItems();
+      }
+
+      await loadPurchaseOrders();
+
+      setIsProcessing(false);
+      setIsComplete(true);
+
+      setTimeout(() => {
+        router.push("/customer/c_transaction");
+      }, 1500);
+    } catch {
+      setIsProcessing(false);
+      setPaymentError("Payment failed while creating purchase orders. Please try again.");
+    }
   };
 
   if (isComplete) {
@@ -104,6 +187,12 @@ export default function CheckoutPageContent() {
         {!hasCheckoutItems && (
           <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
             No checkout items found. Please select items from basket before paying.
+          </div>
+        )}
+
+        {paymentError && (
+          <div className="mt-6 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">
+            {paymentError}
           </div>
         )}
 

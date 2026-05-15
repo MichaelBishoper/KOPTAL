@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 import { getRoleFromRequestCookies } from "@/lib/cookies/server";
 
 function requiredRoleForPath(pathname: string): "customer" | "tennant" | "admin" | null {
-  if (pathname.startsWith("/customer")) return "customer";
+  if (pathname.startsWith("/customer/c_transaction")) return "customer";
   if (pathname.startsWith("/tennant")) return "tennant";
   if (pathname.startsWith("/admin")) return "admin";
   return null;
@@ -25,5 +25,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/customer/:path*", "/tennant/:path*", "/admin/:path*"],
+  matcher: ["/customer/c_transaction/:path*", "/tennant/:path*", "/admin/:path*"],
 };

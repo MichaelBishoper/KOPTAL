@@ -9,4 +9,10 @@ const pool = new Pool({
   database: process.env.PG_DATABASE || process.env.DB_NAME,
 });
 
+// Prevent uncaught 'error' events on the pool from crashing the process.
+// Per-query errors are still propagated as promise rejections and handled individually.
+pool.on('error', (err) => {
+  console.error('[db pool] idle client error:', err.message);
+});
+
 module.exports = pool;

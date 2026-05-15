@@ -1,17 +1,19 @@
 // Database Connection Code
-const { Client } = require('pg')
+const { Pool } = require('pg')
 require('dotenv').config()
 
-const client = new Client ({
-    host: process.env.PG_HOST,
-    port: process.env.PG_PORT,
+const pool = new Pool({
+    host: process.env.PG_HOST || 'localhost',
+    port: process.env.PG_PORT || 5432,
     user: process.env.PG_USER,
     password: process.env.PG_PASSWORD,
-    database: process.env.PG_DATABASE
+    database: process.env.PG_DATABASE,
+    connectionTimeoutMillis: 5000,
+    idleTimeoutMillis: 10000,
+    statement_timeout: 8000,
 })
 
-client.connect()
-    .then(() => console.log("Connected to PostgreSQL"))
-    .catch(err => console.error("Connection Error: ", err) )
+pool.on('connect', () => console.log("Connected to PostgreSQL"))
+pool.on('error', (err) => console.error("DB pool error:", err.message))
 
-module.exports = client
+module.exports = pool

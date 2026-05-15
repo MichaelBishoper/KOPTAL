@@ -17,11 +17,24 @@ interface ProductCartBoxProps {
 }
 
 export default function ProductCartBox({ product }: ProductCartBoxProps) {
+  const availableStock = Math.max(0, Math.floor(Number(product.quantity) || 0));
   const [quantity, setQuantity] = useState(1);
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved">("idle");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const subtotal = Math.round(product.price * quantity);
 
   const handleAddToBasket = async () => {
+    if (availableStock <= 0) {
+      setErrorMessage("This product is out of stock.");
+      return;
+    }
+
+    if (quantity > availableStock) {
+      setErrorMessage(`Only ${availableStock} item(s) available.`);
+      return;
+    }
+
+    setErrorMessage(null);
     setSaveState("saving");
 
     try {
@@ -29,6 +42,7 @@ export default function ProductCartBox({ product }: ProductCartBoxProps) {
       console.log("Saving basket item", payload);
       setSaveState("saved");
     } catch {
+      setErrorMessage("Cannot add more than available stock.");
       setSaveState("idle");
     }
   };
@@ -57,7 +71,8 @@ export default function ProductCartBox({ product }: ProductCartBoxProps) {
             className="w-8 text-center font-semibold border-none outline-none text-sm"
           />
           <button
-            onClick={() => setQuantity(quantity + 1)}
+            onClick={() => setQuantity(Math.min(availableStock || 1, quantity + 1))}
+            disabled={availableStock <= 0 || quantity >= availableStock}
             className="text-teal-600 hover:text-teal-700 font-semibold"
           >
             +
@@ -77,14 +92,21 @@ export default function ProductCartBox({ product }: ProductCartBoxProps) {
         <button
           type="button"
           onClick={handleAddToBasket}
-          disabled={saveState === "saving"}
+          disabled={saveState === "saving" || availableStock <= 0}
           className="w-full bg-[#01a49e] hover:bg-[#057f7b] disabled:bg-[#7fbebc] text-white font-semibold py-2 rounded-lg transition-colors text-sm"
         >
-          {saveState === "saved" ? "Added to Basket" : saveState === "saving" ? "Saving..." : "+ Basket"}
+          {availableStock <= 0
+            ? "Out of Stock"
+            : saveState === "saved"
+              ? "Added to Basket"
+              : saveState === "saving"
+                ? "Saving..."
+                : "+ Basket"}
         </button>
         {saveState === "saved" && (
           <p className="text-xs font-medium text-emerald-700 text-center">Saved locally. Backend can replace this with POST later.</p>
         )}
+        {errorMessage && <p className="text-xs font-medium text-rose-700 text-center">{errorMessage}</p>}
       </div>
     </div>
   );

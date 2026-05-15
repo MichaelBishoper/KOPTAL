@@ -3,7 +3,7 @@
 import { UserProfile } from "@/components/system/UserProfile";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getUserByRoleAndId, mapAppRoleToUserRole, readAuthSessionFromCookies } from "@/lib";
+import { getAuthSession, getUserByRoleAndId, mapAppRoleToUserRole } from "@/lib";
 import type { AdminRow, CustomerRow, TenantRow } from "@/structure/db";
 
 type UserType = "customer" | "tenant" | "admin" | "guest";
@@ -14,25 +14,35 @@ export default function UserPage() {
   const [userType, setUserType] = useState<UserType>("guest");
   const [userData, setUserData] = useState<UserRecord | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  const handleLogout = async () => {
+    setLoggingOut(true);
+    await fetch("/api/auth/logout", { method: "POST" });
+    router.push("/login");
+    router.refresh();
+  };
 
   useEffect(() => {
-    const session = readAuthSessionFromCookies();
-    const role: UserType = mapAppRoleToUserRole(session.role);
-    const userId = session.userId;
+    void (async () => {
+      const session = await getAuthSession();
+      const role: UserType = mapAppRoleToUserRole(session.role);
+      const userId = session.userId;
 
-    if (role === "guest" || userId === null) {
-      router.replace("/login?next=/user");
-      setLoading(false);
-      return;
-    }
+      if (role === "guest") {
+        router.replace("/login?next=/user");
+        setLoading(false);
+        return;
+      }
 
-    setUserType(role);
-    void loadUserData(role, userId);
+      setUserType(role);
+      await loadUserData(role, userId ?? 0);
+    })();
   }, [router]);
 
-  const loadUserData = (role: Exclude<UserType, "guest">, userId: number) => {
+  const loadUserData = async (role: Exclude<UserType, "guest">, userId: number) => {
     try {
-      const user = getUserByRoleAndId(role, userId) as UserRecord | null;
+      const user = await getUserByRoleAndId(role, userId) as UserRecord | null;
 
       if (!user) {
         router.replace("/login?next=/user");
@@ -66,7 +76,12 @@ export default function UserPage() {
         </div>
 
         {/* User Profile */}
-        <UserProfile user={userData} userType={userType} />
+        <UserProfile
+          user={userData}
+          userType={userType}
+          onLogout={handleLogout}
+          loggingOut={loggingOut}
+        />
 
       </div>
     </div>

@@ -1,8 +1,3 @@
-// Migration note:
-// Delete the local `@/data/*` imports inside `frontend/lib/domain/*` when the backend API is ready.
-// Replace those lookups with `fetch('/api/...')` helpers in `frontend/fetch/*`.
-// Frontend never calls DAO directly; DAO stays backend-only behind the API layer.
-// Keep these exported function names stable so components do not need to change.
 export { formatCurrency } from "./formatCurrency";
 export {
   createTenantProductDraft,
@@ -25,13 +20,23 @@ export {
   removeBasketTenantItems,
   type BasketItem,
 } from "./editor/basket";
-export { getTenantById, getTenantByName, getTenants } from "./domain/tenants";
-export { getAdmins, getAdminCategories, saveAdminCategories, getTaxRate, saveTaxRate, resetTaxRate } from "./domain/admins";
-export { getCustomers, getCustomerShippingAddressById } from "./domain/customers";
+export { getTenantById, getTenantByName, getTenants, loadTenants } from "./domain/tenants";
+export {
+  getAdmins,
+  getAdminCategories,
+  loadAdminSettings,
+  saveAdminCategories,
+  getTaxRate,
+  saveTaxRate,
+  resetTaxRate,
+} from "./domain/admins";
+export { getCustomers, getCustomerShippingAddressById, loadCustomers } from "./domain/customers";
 export { getUserByRoleAndId, saveUserProfileDraft, type EditableUserRow, type UserLookupRole } from "./domain/users";
-export { getUnitById, getUnitLabel, getUnits } from "./domain/units";
+export { getUnitById, getUnitLabel, getUnits, loadUnits } from "./domain/units";
 export {
   getProductTenantName,
+  loadTenantProductById,
+  loadTenantProducts,
   getTenantProductById,
   getTenantProducts,
   toCatalogCard,
@@ -39,6 +44,7 @@ export {
   toTenantDashboardCard,
 } from "./domain/tenant-products";
 export {
+  loadPurchaseOrders,
   getPurchaseOrders,
   purchaseOrderRows,
   calculateOrderTotal,
@@ -58,16 +64,11 @@ export {
 } from "./domain/checkout";
 export { resolvePageHeaderAction, resolvePageHeaderTitle, shouldHidePageHeader } from "./navigation/page-header";
 export { searchProductsAndCategories, filterProductsBySearch, type SearchResult } from "./search";
+export { getAuthSession } from "./domain/session";
 export {
   COOKIE_KEYS,
   normalizeRoleValue,
   mapAppRoleToUserRole,
-  readCookieLatest,
-  writeCookie,
-  clearCookie,
-  readAuthSessionFromCookies,
-  writeAuthCookies,
-  clearAuthCookies,
   type AppRole,
   type UserRole,
 } from "./cookies";

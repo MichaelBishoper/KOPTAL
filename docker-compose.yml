@@ -9,7 +9,7 @@ services:
       POSTGRES_PASSWORD: password123
       POSTGRES_DB: koptal
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./infrastructure/docker/init.sql:/docker-entrypoint-initdb.d/init.sql
@@ -20,9 +20,9 @@ services:
       context: ./services/iam
     container_name: koptal_iam
     ports:
-      - "3000:3000"
+      - "3001:3001"
     environment:
-      - PORT=3000
+      - PORT=3001
       - PG_HOST=db
       - PG_PORT=5432
       - PG_USER=postgres
@@ -56,7 +56,7 @@ services:
       context: ./services/fileUpload
     container_name: koptal_fileupload
     ports:
-      - "3001:3000"
+      - "3002:3000"
     environment:
       - PORT=3000
       - UPLOAD_DIR=/app/src/uploads/
@@ -65,7 +65,7 @@ services:
       - DB_USER=postgres
       - DB_PASSWORD=password123
       - DB_PORT=5432
-      - BASE_URL=http://localhost:3001
+      - BASE_URL=http://localhost:3002
     volumes:
       - fileupload_data:/app/src/uploads/
     depends_on:

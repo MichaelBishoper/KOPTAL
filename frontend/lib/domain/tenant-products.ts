@@ -1,10 +1,9 @@
-import { tenantProducts } from "@/data/tenant-products";
 import type { TenantProductRow } from "@/structure/db";
+import { fetchTenantProductByIdFromAPI, fetchTenantProductsFromAPI } from "@/fetch/tenant-products";
 import { getTenantById, getTenantByName } from "./tenants";
 import { getUnitById } from "./units";
 
-// Replace the `tenantProducts` import with `fetch('/api/tenant-products')` when backend data is ready.
-// Keep the mapping helpers here so components stay stable.
+let cachedTenantProducts: TenantProductRow[] = [];
 
 export type TenantProductCard = {
   id: string;
@@ -28,13 +27,35 @@ export type TenantProductDetails = TenantProductRow & {
 };
 
 export function getTenantProducts(): TenantProductRow[] {
-  return tenantProducts;
+  return [...cachedTenantProducts];
+}
+
+export async function loadTenantProducts(): Promise<TenantProductRow[]> {
+  const rows = await fetchTenantProductsFromAPI();
+  cachedTenantProducts = rows;
+  return [...cachedTenantProducts];
 }
 
 export function getTenantProductById(productId?: number | string): TenantProductRow | undefined {
   if (productId == null || productId === "") return undefined;
   const numericId = Number(productId);
-  return tenantProducts.find((product) => product.product_id === numericId || String(product.product_id) === String(productId));
+  return cachedTenantProducts.find((product) => product.product_id === numericId || String(product.product_id) === String(productId));
+}
+
+export async function loadTenantProductById(productId?: number | string): Promise<TenantProductRow | undefined> {
+  if (productId == null || productId === "") return undefined;
+  const row = await fetchTenantProductByIdFromAPI(productId);
+
+  if (!row) return undefined;
+
+  const index = cachedTenantProducts.findIndex((entry) => entry.product_id === row.product_id);
+  if (index >= 0) {
+    cachedTenantProducts[index] = row;
+  } else {
+    cachedTenantProducts.push(row);
+  }
+
+  return row;
 }
 
 export function toCatalogCard(product: TenantProductRow): TenantProductCard {
@@ -46,7 +67,7 @@ export function toCatalogCard(product: TenantProductRow): TenantProductCard {
     name: product.name,
     image: product.image ?? tenant?.image ?? "/product-placeholder.jpg",
     tenantName: tenant?.name ?? "Unknown Tenant",
-    location: tenant?.location ?? "West Java",
+    location: tenant?.location ?? "",
     price: product.price,
     quantity: product.quantity,
     unitLabel: unit?.unit_name ?? "Items",
@@ -59,8 +80,8 @@ export function toProductDetails(product: TenantProductRow): TenantProductDetail
   return {
     ...product,
     id: String(product.product_id),
-    tenantName: tenant?.name ?? "Your Store",
-    location: tenant?.location ?? "West Java",
+    tenantName: tenant?.name ?? "Unknown Tenant",
+    location: tenant?.location ?? "",
     image: product.image ?? tenant?.image ?? "/product-placeholder.jpg",
     images: product.image ? [product.image] : [tenant?.image ?? "/product-placeholder.jpg"],
     description: product.description ?? "",

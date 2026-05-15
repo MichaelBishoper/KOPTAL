@@ -10,6 +10,8 @@ type UserType = "customer" | "tenant" | "admin" | "guest";
 interface UserProfileProps {
   user: AdminRow | CustomerRow | TenantRow | null;
   userType: UserType;
+  onLogout?: () => void;
+  loggingOut?: boolean;
 }
 
 function Field({ label, value }: { label: string; value: string }) {
@@ -45,9 +47,10 @@ function EditField({
   );
 }
 
-export function UserProfile({ user, userType }: UserProfileProps) {
+export function UserProfile({ user, userType, onLogout, loggingOut }: UserProfileProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [draft, setDraft] = useState<Record<string, string>>({});
+  const [saving, setSaving] = useState(false);
 
   if (!user) {
     return (
@@ -57,9 +60,9 @@ export function UserProfile({ user, userType }: UserProfileProps) {
     );
   }
 
-  const joinDate = new Date(user.created_at);
-  const joinYear = joinDate.getFullYear();
-  const joinMonth = joinDate.toLocaleString("en-US", { month: "short" });
+  const joinDate = user.created_at ? new Date(user.created_at) : null;
+  const joinYear = joinDate && !isNaN(joinDate.getTime()) ? joinDate.getFullYear() : null;
+  const joinMonth = joinDate && !isNaN(joinDate.getTime()) ? joinDate.toLocaleString("en-US", { month: "short" }) : null;
 
   const get = (key: string) =>
     isEditing ? (draft[key] ?? String((user as Record<string, unknown>)[key] ?? "")) : String((user as Record<string, unknown>)[key] ?? "");
@@ -73,10 +76,14 @@ export function UserProfile({ user, userType }: UserProfileProps) {
     setDraft((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const handleSave = () => {
-    // Save through lib so backend API integration can be centralized later.
-    saveUserProfileDraft(user, draft);
-    setIsEditing(false);
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await saveUserProfileDraft(user, draft);
+      setIsEditing(false);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleProfileImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -108,7 +115,7 @@ export function UserProfile({ user, userType }: UserProfileProps) {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {/* Left Side - Image */}
         <div className="flex flex-col items-center">
-          <div className="relative w-60O h-60 mb-4">
+          <div className="relative w-60 h-60 mb-4">
             <Image
               src={profileImageSrc}
               alt={user.name}
@@ -147,24 +154,36 @@ export function UserProfile({ user, userType }: UserProfileProps) {
                 </button>
                 <button
                   onClick={handleSave}
+                  disabled={saving}
                   className="rounded-lg bg-[#01A49E] px-4 py-2 text-sm font-semibold text-white hover:bg-teal-700 transition-colors"
                 >
-                  Save
+                  {saving ? "Saving..." : "Save"}
                 </button>
               </>
             ) : (
-              <button
-                onClick={handleEdit}
-                className="rounded-lg border border-teal-600 px-4 py-2 text-sm font-semibold text-teal-600 hover:bg-teal-50 transition-colors"
-              >
-                Edit Profile
-              </button>
+              <>
+                <button
+                  onClick={handleEdit}
+                  className="rounded-lg border border-teal-600 px-4 py-2 text-sm font-semibold text-teal-600 hover:bg-teal-50 transition-colors"
+                >
+                  Edit Profile
+                </button>
+                {onLogout ? (
+                  <button
+                    onClick={onLogout}
+                    disabled={loggingOut}
+                    className="rounded-lg bg-red-50 px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-100 transition-colors disabled:opacity-50"
+                  >
+                    {loggingOut ? "Signing out..." : "Sign Out"}
+                  </button>
+                ) : null}
+              </>
             )}
           </div>
 
           {/* Basic Info */}
           <div className="grid grid-cols-2 gap-6">
-            <Field label="Join Date" value={`${joinMonth} ${joinYear}`} />
+            <Field label="Join Date" value={joinMonth && joinYear ? `${joinMonth} ${joinYear}` : "—"} />
 
             {isEditing ? (
               <EditField label="Email" name="email" value={get("email")} onChange={handleChange} />
@@ -276,11 +295,13 @@ function TenantDetails({
       </div>
 
       <div className="space-y-4">
-        {isEditing ? (
-          <EditField label="Location" name="location" value={get("location")} onChange={onChange} />
-        ) : (
-          <Field label="Location" value={tenant.location || "Not specified"} />
-        )}
+        <div className="flex-1">
+          {isEditing ? (
+            <EditField label="Location" name="location" value={get("location")} onChange={onChange} />
+          ) : (
+            <Field label="Location" value={tenant.location || "Not specified"} />
+          )}
+        </div>
       </div>
     </div>
   );

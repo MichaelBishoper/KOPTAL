@@ -40,7 +40,7 @@ async function updateCustomer(id, customerData) {
         `UPDATE customers
         SET name = $1, email = $2, phone = $3, company = $4, tax_id = $5, billing_address = $6, shipping_address = $7
         WHERE customer_id = $8
-        RETURNING *`, [name, email, phone, company, tax_id, billing_address, shipping_address]
+        RETURNING *`, [name, email, phone, company, tax_id, billing_address, shipping_address, id]
     );
     return result.rows[0]; 
 }

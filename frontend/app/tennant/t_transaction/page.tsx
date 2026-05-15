@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -10,25 +10,63 @@ import {
 	getStatusBadgeClass,
 	getStatusLabel,
 	isAcceptedOrderStatus,
+	loadPurchaseOrders,
 } from "@/lib";
+import { updatePurchaseOrderStatusOnAPI } from "@/fetch/purchase-orders";
 
 export default function TennantTransactions() {
-	const orders = getPurchaseOrders().map((order) => ({
-		...order,
-		date: formatOrderDate(order.order_date),
-		shippingAddress: order.shipping_address,
-	}));
+	const [ordersVersion, setOrdersVersion] = useState(0);
+	const [isUpdating, setIsUpdating] = useState(false);
+
+	useEffect(() => {
+		void (async () => {
+			await loadPurchaseOrders();
+			setOrdersVersion((current) => current + 1);
+		})();
+	}, []);
+
+	const orders = useMemo(
+		() =>
+			getPurchaseOrders().map((order) => ({
+				...order,
+				date: formatOrderDate(order.order_date),
+				shippingAddress: order.shipping_address,
+			})),
+		[ordersVersion],
+	);
 
 	const [openOrderId, setOpenOrderId] = useState(orders[0]?.id ?? "");
 	const [statusById, setStatusById] = useState<Record<string, string>>(
 		() => Object.fromEntries(orders.map((order) => [order.id, order.status])),
 	);
 
-	const setStatus = (orderId: string, nextStatus: "Ontheway" | "Cancelled") => {
+	useEffect(() => {
+		if (!openOrderId && orders[0]?.id) {
+			setOpenOrderId(orders[0].id);
+		}
+
+		setStatusById(Object.fromEntries(orders.map((order) => [order.id, order.status])));
+	}, [orders, openOrderId]);
+
+	const setStatus = async (orderId: string, nextStatus: "shipped" | "cancelled") => {
+		if (isUpdating) return;
+
+		const order = orders.find((entry) => entry.id === orderId);
+		if (!order) return;
+
+		setIsUpdating(true);
+		const updated = await updatePurchaseOrderStatusOnAPI(order.po_id, nextStatus);
+		setIsUpdating(false);
+
+		if (!updated) return;
+
 		setStatusById((current) => ({
 			...current,
-			[orderId]: nextStatus,
+			[orderId]: updated.status,
 		}));
+
+		await loadPurchaseOrders();
+		setOrdersVersion((current) => current + 1);
 	};
 
 	return (
@@ -107,16 +145,16 @@ export default function TennantTransactions() {
 												<div className="flex items-center gap-2">
 													<button
 														type="button"
-														onClick={() => setStatus(order.id, "Cancelled")}
-														disabled={isLocked}
+														onClick={() => void setStatus(order.id, "cancelled")}
+														disabled={isLocked || isUpdating}
 														className="rounded-lg px-4 py-2 text-sm font-semibold transition-colors border border-rose-300 text-rose-700 hover:bg-rose-50 disabled:cursor-not-allowed disabled:bg-gray-200 disabled:border-gray-200 disabled:text-gray-500"
 													>
 														Reject
 													</button>
 													<button
 														type="button"
-														onClick={() => setStatus(order.id, "Ontheway")}
-														disabled={isLocked}
+														onClick={() => void setStatus(order.id, "shipped")}
+														disabled={isLocked || isUpdating}
 														className="rounded-lg px-4 py-2 text-sm font-semibold transition-colors bg-teal-600 text-white hover:bg-teal-700 disabled:cursor-not-allowed disabled:bg-gray-300"
 													>
 														Accept

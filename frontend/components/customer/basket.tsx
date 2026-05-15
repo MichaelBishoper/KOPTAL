@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { ChevronLeftIcon, TrashIcon } from "@heroicons/react/24/outline";
-import { formatCurrency, getBasketItems, getTaxRate, getTenantById, removeBasketItem, type BasketItem } from "@/lib";
+import { formatCurrency, getAuthSession, getBasketItems, getTaxRate, getTenantById, removeBasketItem, type BasketItem } from "@/lib";
 
 type BasketGroup = {
   tenantId: number;
@@ -58,8 +58,33 @@ export default function Basket() {
     setItems(nextItems);
   };
 
-  const handleCheckoutTenant = (tenantId: number) => {
-    router.push(`/system/checkout?tenantId=${tenantId}`);
+  const redirectGuestToLogin = (nextPath: string) => {
+    const loginPath = `/login?next=${encodeURIComponent(nextPath)}&reason=checkout-required`;
+    router.push(loginPath);
+  };
+
+  const handleCheckoutTenant = async (tenantId: number) => {
+    const session = await getAuthSession();
+    const nextPath = `/system/checkout?tenantId=${tenantId}`;
+
+    if (session.role === "guest") {
+      redirectGuestToLogin(nextPath);
+      return;
+    }
+
+    router.push(nextPath);
+  };
+
+  const handleCheckoutAll = async () => {
+    const session = await getAuthSession();
+    const nextPath = "/system/checkout";
+
+    if (session.role === "guest") {
+      redirectGuestToLogin(nextPath);
+      return;
+    }
+
+    router.push(nextPath);
   };
 
   if (!isReady) {
@@ -177,7 +202,7 @@ export default function Basket() {
           </div>
           <p className="mt-2 text-sm text-gray-600">Items in basket: {items.length}</p>
           <p className="mt-2 text-sm text-gray-600">Tenants: {groupedItems.length}</p>
-          <button className="mt-6 w-full rounded-xl bg-teal-600 px-4 py-3 font-semibold text-white hover:bg-teal-700 transition" onClick={() => router.push("/system/checkout")}>
+          <button className="mt-6 w-full rounded-xl bg-teal-600 px-4 py-3 font-semibold text-white hover:bg-teal-700 transition" onClick={handleCheckoutAll}>
             💳 Checkout
           </button>
         </aside>

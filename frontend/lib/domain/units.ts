@@ -1,15 +1,21 @@
-import { units } from "@/data/units";
 import type { UnitRow } from "@/structure/db";
+import { fetchUnitsFromAPI } from "@/fetch/units";
 
-// Replace the `units` import with `fetch('/api/units')` when backend data is ready.
+let cachedUnits: UnitRow[] = [];
 
 export function getUnits(): UnitRow[] {
-  return units;
+  return [...cachedUnits];
+}
+
+export async function loadUnits(): Promise<UnitRow[]> {
+  const rows = await fetchUnitsFromAPI();
+  cachedUnits = rows;
+  return [...cachedUnits];
 }
 
 export function getUnitById(unitId?: number): UnitRow | undefined {
   if (unitId == null) return undefined;
-  return units.find((unit) => unit.unit_id === unitId);
+  return cachedUnits.find((unit) => unit.unit_id === unitId);
 }
 
 export function getUnitLabel(unitId?: number): string {
