@@ -79,7 +79,7 @@ export default function ProductCartBox({ product }: ProductCartBoxProps) {
       <div className="flex gap-3 mb-4 pb-4 border-b border-gray-200">
         <div className="relative w-12 h-12 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
             {(() => {
-              const src = safeImageSrc(product.image) || "/product-placeholder.jpg";
+              const src = safeImageSrc(product.image) || "/product-placeholder.png";
               if (shouldUseNativeImage(src)) {
                 // eslint-disable-next-line @next/next/no-img-element
                 return <img src={src} alt={product.name} className="object-cover w-full h-full" />;

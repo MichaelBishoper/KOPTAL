@@ -15,7 +15,7 @@ export default function Footer() {
               Connecting local farmers and traditional markets with high-volume buyers.
             </h2>
             <p className="mt-4 max-w-2xl text-sm leading-7 text-white/75 sm:text-base">
-              KOPTAL is a marketplace built for restaurants, MBG, and other bulk buyers who need reliable supply from local farmers and traditional market sellers.
+              KOPTAL is a marketplace built for drug dealers, meth heads and coke addicts.
             </p>
           </div>
 

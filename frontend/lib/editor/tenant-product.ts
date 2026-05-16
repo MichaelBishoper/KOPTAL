@@ -34,9 +34,9 @@ export function createEmptyProductDraft(
     tenantName,
     location,
     images: [
-      "/product-placeholder.jpg",
-      "/product-placeholder.jpg",
-      "/product-placeholder.jpg",
+      "/product-placeholder.png",
+      "/product-placeholder.png",
+      "/product-placeholder.png",
     ],
     description: "",
     availability: "0",
@@ -46,7 +46,7 @@ export function createEmptyProductDraft(
 export function createProductDraftFromRow(product?: TenantProductRow): ProductDraft {
   if (!product) return createEmptyProductDraft();
 
-  const primaryImage = product.image ?? "/product-placeholder.jpg";
+  const primaryImage = product.image ?? "/product-placeholder.png";
 
   return {
     id: String(product.product_id),
@@ -81,7 +81,7 @@ export function buildTenantProductSavePayload(
     quantity: Number(draft.availability || 0),
     price: Number(draft.price || 0),
     description: draft.description.trim(),
-    image: draft.images[0] ?? "/product-placeholder.jpg",
+    image: draft.images[0] ?? "/product-placeholder.png",
     location: draft.location.trim(),
     unitType: draft.unitType,
   };

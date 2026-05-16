@@ -80,7 +80,7 @@ export default function TennantTransactions() {
 						const normalizedStatus = currentStatus.toLowerCase();
 						const isAccepted = isAcceptedOrderStatus(currentStatus);
 						const isLocked = isAccepted || normalizedStatus === "cancelled";
-						const customerImage = safeImageSrc(order.customerImage) || "/product-placeholder.jpg";
+						const customerImage = safeImageSrc(order.customerImage) || "/product-placeholder.png";
 						const useNativeCustomerImage = shouldUseNativeImage(customerImage);
 						const customerName = order.customerName ?? order.name;
 

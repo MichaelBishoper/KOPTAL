@@ -158,7 +158,7 @@ export async function fetchPurchaseOrdersFromAPI(): Promise<PurchaseOrder[]> {
             id: `item-${item.po_item_id}`,
             name: product?.name ?? `Product ${item.product_id}`,
             price: item.unit_price,
-            image: product?.image ?? "/product-placeholder.jpg",
+            image: product?.image ?? "/product-placeholder.png",
             details: buildItemDetails(product, order),
             unitLabel: product?.unit_id === 1 ? "grams" : "pieces",
           } as POItem;

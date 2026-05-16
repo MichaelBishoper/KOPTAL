@@ -64,7 +64,7 @@ export function buildBasketSavePayload(
     quantity,
     price: product.price,
     subtotal,
-    image: product.image ?? "/product-placeholder.jpg",
+    image: product.image ?? "/product-placeholder.png",
     name: product.name,
     tenant_name: product.tenantName,
     tenant_location: product.location,

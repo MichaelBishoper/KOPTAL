@@ -38,7 +38,7 @@ export default function Catalog({ products = [], columns = 4, searchQuery = "" }
             <Link href={`/customer/product/${product.id}`} className="block cursor-pointer">
               <div className="relative w-full aspect-square bg-gray-100">
                 {(() => {
-                  const src = safeImageSrc(product.image) || "/product-placeholder.jpg";
+                  const src = safeImageSrc(product.image) || "/product-placeholder.png";
                   if (shouldUseNativeImage(src)) {
                     // eslint-disable-next-line @next/next/no-img-element
                     return <img src={src} alt={product.name} className="object-cover w-full h-full" />;

@@ -2,7 +2,7 @@ import type { TenantRow } from "@/structure/db";
 import { fetchTenantsFromAPI } from "@/fetch/tenants";
 
 let cachedTenants: TenantRow[] = [];
-const TENANT_IMAGE_FALLBACK = "/product-placeholder.jpg";
+const TENANT_IMAGE_FALLBACK = "/product-placeholder.png";
 
 export function getTenants(): TenantRow[] {
   return [...cachedTenants];

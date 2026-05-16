@@ -22,7 +22,7 @@ export function TransactionDetails() {
   const tenant = getTenantById(order.tenant_id);
   const tenantImage = order.tenantImage ?? getTenantProfileImage(tenant);
   const useNativeTenantImage = shouldUseNativeImage(tenantImage);
-  const customerImage = order.customerImage ?? "/product-placeholder.jpg";
+  const customerImage = order.customerImage ?? "/product-placeholder.png";
   const useNativeCustomerImage = shouldUseNativeImage(customerImage);
   const customerName = order.customerName ?? `Customer #${order.customer_id}`;
   const paymentMethod = (() => {

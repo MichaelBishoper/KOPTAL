@@ -107,7 +107,7 @@ export default function ProductEditor({ mode, initialProduct }: ProductEditorPro
             <div className="rounded-3xl border border-stone-200 bg-white p-6 shadow-sm flex flex-col items-center text-center">
               <div className="h-56 w-56 sm:h-72 sm:w-72 rounded-3xl overflow-hidden border border-stone-200 bg-stone-100">
                 {(() => {
-                  const src = draft.images[0] || "/product-placeholder.jpg";
+                  const src = draft.images[0] || "/product-placeholder.png";
                   if (shouldUseNativeImage(src)) {
                     // eslint-disable-next-line @next/next/no-img-element
                     return <img src={src} alt={draft.name || "Product preview"} className="h-full w-full object-cover" />;

@@ -14,12 +14,12 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
   const [activeTab, setActiveTab] = useState<"description" | "review">("description");
   const [selectedImage, setSelectedImage] = useState(0);
   const details = toProductDetails(product);
-  const images = details.images ?? [details.image ?? "/product-placeholder.jpg"];
+  const images = details.images ?? [details.image ?? "/product-placeholder.png"];
   const unitPrice = product.price;
   const resolvedDescription = details.description ?? "No description has been added for this product yet.";
   const unitPriceLabel = getUnitPerPriceLabel(product.unit_id);
   const categoryLabel = details.category?.trim() || "Uncategorized";
-  const tenantImageSrcRaw = details.tenantImage ?? "/product-placeholder.jpg";
+  const tenantImageSrcRaw = details.tenantImage ?? "/product-placeholder.png";
   const tenantImageSrc = safeImageSrc(tenantImageSrcRaw);
   const useNativeTenantImage = shouldUseNativeImage(tenantImageSrc);
 
@@ -31,7 +31,7 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
           {/* Main Image */}
           <div className="relative w-full aspect-square bg-gray-100 rounded-lg overflow-hidden border border-gray-300">
             {(() => {
-              const src = safeImageSrc(images[selectedImage]) || "/product-placeholder.jpg";
+              const src = safeImageSrc(images[selectedImage]) || "/product-placeholder.png";
               if (shouldUseNativeImage(src)) {
                 // eslint-disable-next-line @next/next/no-img-element
                 return <img src={src} alt={`${details.name} - Image ${selectedImage + 1}`} className="object-cover w-full h-full" />;
@@ -44,7 +44,7 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
           {images.length > 1 && (
             <div className="flex gap-3">
               {images.map((image, index) => {
-                const thumbSrc = safeImageSrc(image) || "/product-placeholder.jpg";
+                const thumbSrc = safeImageSrc(image) || "/product-placeholder.png";
                 return (
                   <button
                     key={index}
