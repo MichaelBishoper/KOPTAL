@@ -12,7 +12,7 @@ const customerRoutes = require('./routers/customerRoutes');
 const adminRoutes = require('./routers/adminRoutes');
 
 const app = express();
-const casiopea = process.env.PORT || 3000;
+const casiopea = process.env.PORT || 3001;
 
 // Swagger definition
 const swaggerOptions = {
@@ -25,9 +25,9 @@ const swaggerOptions = {
         },
         servers: [
             {
-                url: `http://localhost:${process.env.PORT || 3000}`,
-                description: 'Development server',
-            },
+                    url: `http://localhost:${process.env.PORT || 3001}`,
+                    description: 'Development server',
+                },
         ],
         components: {
             securitySchemes: {
@@ -65,5 +65,5 @@ app.get('/debug', (req, res) => {
 app.use(errorHandler);
 
 app.listen(casiopea, () => {
-    console.log(`Server running on port ${casiopea}`);
+    console.log(`IAM Server running on port ${casiopea}`);
 });
