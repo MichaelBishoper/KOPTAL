@@ -20,12 +20,16 @@ type RegisterForm = {
   email: string;
   phone: string;
   password: string;
+  // admin fields
+  cooperative_id_number: string;
   // customer fields
   company: string;
-  tax_id: string;
+  business_id_number: string;
+  corporate_tax_id: string;
   billing_address: string;
   shipping_address: string;
   // tenant fields
+  national_id_number: string;
   location: string;
 };
 
@@ -47,10 +51,13 @@ export default function LoginPage() {
     email: "",
     phone: "",
     password: "",
+    cooperative_id_number: "",
     company: "",
-    tax_id: "",
+    business_id_number: "",
+    corporate_tax_id: "",
     billing_address: "",
     shipping_address: "",
+    national_id_number: "",
     location: "",
   });
 
@@ -109,6 +116,19 @@ export default function LoginPage() {
     setError("");
     setSuccess("");
 
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(registerForm.email)) {
+      setError("Please enter a valid email address.");
+      setLoading(false);
+      return;
+    }
+
+    if (registerForm.password.length < 8) {
+      setError("Password must be at least 8 characters long.");
+      setLoading(false);
+      return;
+    }
+
     const payload: Record<string, string> = {
       user_type: registerForm.user_type,
       name: registerForm.name,
@@ -117,20 +137,47 @@ export default function LoginPage() {
       password: registerForm.password,
     };
 
+    if (registerForm.user_type === "admin") {
+      if (!registerForm.cooperative_id_number.trim() || registerForm.cooperative_id_number.trim().length < 5) {
+        setError("Cooperative ID Number must be at least 5 characters long.");
+        setLoading(false);
+        return;
+      }
+      payload.cooperative_id_number = registerForm.cooperative_id_number.trim();
+    }
+
     if (registerForm.user_type === "customer") {
+      if (!/^\d{13}$/.test(registerForm.business_id_number)) {
+        setError("Business ID Number (NIB) must be exactly 13 digits.");
+        setLoading(false);
+        return;
+      }
+      if (!/^[\d\.\-]+$/.test(registerForm.corporate_tax_id) || registerForm.corporate_tax_id.length < 15) {
+        setError("Corporate Tax ID (NPWP Badan) is invalid.");
+        setLoading(false);
+        return;
+      }
+
       payload.company = registerForm.company;
-      payload.tax_id = registerForm.tax_id;
+      payload.business_id_number = registerForm.business_id_number;
+      payload.corporate_tax_id = registerForm.corporate_tax_id;
       payload.billing_address = registerForm.billing_address;
       payload.shipping_address = registerForm.shipping_address;
     }
 
     if (registerForm.user_type === "tenant") {
+      if (!/^\d{16}$/.test(registerForm.national_id_number)) {
+        setError("National ID Number (NIK) must be exactly 16 digits.");
+        setLoading(false);
+        return;
+      }
       if (!registerForm.location.trim()) {
         setError("Location is required for tenant registration.");
         setLoading(false);
         return;
       }
 
+      payload.national_id_number = registerForm.national_id_number.trim();
       payload.location = registerForm.location.trim();
     }
 
@@ -317,6 +364,17 @@ export default function LoginPage() {
               {registerForm.user_type === "tenant" ? (
                 <>
                   <label className="block">
+                    <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-600">National ID Number (NIK)</span>
+                    <input
+                      type="text"
+                      required
+                      value={registerForm.national_id_number}
+                      onChange={(event) => handleRegisterChange("national_id_number", event.target.value)}
+                      placeholder="16-digit NIK"
+                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:border-teal-500 focus:outline-none"
+                    />
+                  </label>
+                  <label className="block">
                     <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-600">Location</span>
                     <input
                       type="text"
@@ -346,12 +404,25 @@ export default function LoginPage() {
                   </label>
 
                   <label className="block">
-                    <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-600">Tax ID</span>
+                    <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-600">Business ID Number (NIB)</span>
                     <input
                       type="text"
                       required
-                      value={registerForm.tax_id}
-                      onChange={(event) => handleRegisterChange("tax_id", event.target.value)}
+                      value={registerForm.business_id_number}
+                      onChange={(event) => handleRegisterChange("business_id_number", event.target.value)}
+                      placeholder="13-digit NIB"
+                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:border-teal-500 focus:outline-none"
+                    />
+                  </label>
+
+                  <label className="block">
+                    <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-600">Corporate Tax ID (NPWP Badan)</span>
+                    <input
+                      type="text"
+                      required
+                      value={registerForm.corporate_tax_id}
+                      onChange={(event) => handleRegisterChange("corporate_tax_id", event.target.value)}
+                      placeholder="e.g. 01.234.567.8-901.234"
                       className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:border-teal-500 focus:outline-none"
                     />
                   </label>
@@ -374,6 +445,22 @@ export default function LoginPage() {
                       required
                       value={registerForm.shipping_address}
                       onChange={(event) => handleRegisterChange("shipping_address", event.target.value)}
+                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:border-teal-500 focus:outline-none"
+                    />
+                  </label>
+                </>
+              ) : null}
+
+              {registerForm.user_type === "admin" ? (
+                <>
+                  <label className="block">
+                    <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-600">Cooperative ID Number</span>
+                    <input
+                      type="text"
+                      required
+                      value={registerForm.cooperative_id_number}
+                      onChange={(event) => handleRegisterChange("cooperative_id_number", event.target.value)}
+                      placeholder="e.g. 1234.5678.90"
                       className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:border-teal-500 focus:outline-none"
                     />
                   </label>
