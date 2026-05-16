@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -10,6 +10,7 @@ import {
 	getStatusBadgeClass,
 	getStatusLabel,
 	isAcceptedOrderStatus,
+	shouldUseNativeImage,
 	loadPurchaseOrders,
 } from "@/lib";
 import { updatePurchaseOrderStatusOnAPI } from "@/fetch/purchase-orders";
@@ -17,6 +18,9 @@ import { updatePurchaseOrderStatusOnAPI } from "@/fetch/purchase-orders";
 export default function TennantTransactions() {
 	const [ordersVersion, setOrdersVersion] = useState(0);
 	const [isUpdating, setIsUpdating] = useState(false);
+	const [openOrderId, setOpenOrderId] = useState("");
+	const [statusById, setStatusById] = useState<Record<string, string>>({});
+	const hasInitializedOpenOrderRef = useRef(false);
 
 	useEffect(() => {
 		void (async () => {
@@ -35,18 +39,14 @@ export default function TennantTransactions() {
 		[ordersVersion],
 	);
 
-	const [openOrderId, setOpenOrderId] = useState(orders[0]?.id ?? "");
-	const [statusById, setStatusById] = useState<Record<string, string>>(
-		() => Object.fromEntries(orders.map((order) => [order.id, order.status])),
-	);
-
 	useEffect(() => {
-		if (!openOrderId && orders[0]?.id) {
+			if (!hasInitializedOpenOrderRef.current && orders[0]?.id) {
 			setOpenOrderId(orders[0].id);
+				hasInitializedOpenOrderRef.current = true;
 		}
 
 		setStatusById(Object.fromEntries(orders.map((order) => [order.id, order.status])));
-	}, [orders, openOrderId]);
+		}, [orders]);
 
 	const setStatus = async (orderId: string, nextStatus: "shipped" | "cancelled") => {
 		if (isUpdating) return;
@@ -79,6 +79,8 @@ export default function TennantTransactions() {
 						const normalizedStatus = currentStatus.toLowerCase();
 						const isAccepted = isAcceptedOrderStatus(currentStatus);
 						const isLocked = isAccepted || normalizedStatus === "cancelled";
+						const tenantImage = order.tenantImage ?? order.items[0]?.image ?? "/product-placeholder.jpg";
+						const useNativeTenantImage = shouldUseNativeImage(tenantImage);
 
 						return (
 							<div key={order.id} className="border-2 border-gray-300 rounded-xl overflow-hidden bg-white">
@@ -97,12 +99,20 @@ export default function TennantTransactions() {
 									<div className="flex items-start justify-between gap-4">
 										<div className="flex items-start gap-4 min-w-0">
 											<div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden border border-gray-200 bg-gray-100 flex-shrink-0">
-												<Image
-													src={order.items[0]?.image ?? "/product-placeholder.jpg"}
-													alt={order.name}
-													fill
-													className="object-cover"
-												/>
+													{useNativeTenantImage ? (
+														<img
+															src={tenantImage}
+															alt={order.tenantName ?? order.name}
+															className="h-full w-full object-cover"
+														/>
+													) : (
+														<Image
+															src={tenantImage}
+															alt={order.tenantName ?? order.name}
+															fill
+															className="object-cover"
+														/>
+													)}
 											</div>
 
 											<div className="min-w-0">

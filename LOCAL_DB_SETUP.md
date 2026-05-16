@@ -24,6 +24,7 @@ CREATE TABLE admins (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 ```
+	image_url VARCHAR(500), -- NEW
 ## Tenants Table
 Old:
 ```sql
@@ -33,6 +34,7 @@ create table tenants (
 	email varchar(255) unique not null,
 	phone varchar(255) unique not null,
 	verified boolean default false,
+	image_url VARCHAR(500), -- NEW
 	password_hash VARCHAR(255) not null,
 	created_at TIMESTAMP default current_timestamp
 );
@@ -116,6 +118,7 @@ create table customers (
 	billing_address text not null,
 	shipping_address text not null,
 	password_hash VARCHAR(255) not null,
+	image_url VARCHAR(500), -- NEW
 	created_at TIMESTAMP default current_timestamp
 );
 
@@ -125,6 +128,7 @@ CREATE TABLE admins (
     email VARCHAR(255) UNIQUE NOT NULL,
     phone VARCHAR(255) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
+    image_url VARCHAR(500), -- NEW
     categories TEXT[],  -- NEW
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

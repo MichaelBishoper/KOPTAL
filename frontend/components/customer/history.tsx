@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -22,6 +22,9 @@ export default function History() {
   const [ordersVersion, setOrdersVersion] = useState(0);
   const [updatingHistoryId, setUpdatingHistoryId] = useState<string | null>(null);
   const [statusError, setStatusError] = useState<string | null>(null);
+  const [openHistoryId, setOpenHistoryId] = useState("");
+  const [statusById, setStatusById] = useState<Record<string, string>>({});
+  const hasInitializedOpenHistoryRef = useRef(false);
 
   useEffect(() => {
     void (async () => {
@@ -50,18 +53,14 @@ export default function History() {
     [ordersVersion, taxRate],
   );
 
-  const [openHistoryId, setOpenHistoryId] = useState(histories[0]?.id ?? "");
-  const [statusById, setStatusById] = useState<Record<string, string>>(
-    () => Object.fromEntries(histories.map((history) => [history.id, history.status])),
-  );
-
   useEffect(() => {
-    setStatusById(Object.fromEntries(histories.map((history) => [history.id, history.status])));
-
-    if (!openHistoryId && histories[0]?.id) {
+    if (!hasInitializedOpenHistoryRef.current && histories[0]?.id) {
       setOpenHistoryId(histories[0].id);
+      hasInitializedOpenHistoryRef.current = true;
     }
-  }, [histories, openHistoryId]);
+
+    setStatusById(Object.fromEntries(histories.map((history) => [history.id, history.status])));
+  }, [histories]);
 
   const markAsDelivered = async (historyId: string, poId: number) => {
     if (updatingHistoryId) return;

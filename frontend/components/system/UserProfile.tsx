@@ -158,6 +158,13 @@ export function UserProfile({ user, userType, onLogout, loggingOut }: UserProfil
     void uploadImageFileOnAPI(file, entityType, entityId)
       .then((uploadedUrl) => {
         setDraft((prev) => ({ ...prev, image: uploadedUrl }));
+        void saveUserProfileDraft(
+          user,
+          { image: uploadedUrl },
+          userType === "tenant" || userType === "customer" || userType === "admin" ? userType : undefined,
+        ).catch(() => {
+          setSaveError("Image uploaded, but saving your profile image failed.");
+        });
       })
       .catch(() => {
         setSaveError("Image upload failed. Please try another file.");

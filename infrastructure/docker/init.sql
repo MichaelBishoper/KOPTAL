@@ -30,6 +30,7 @@ CREATE TABLE customers (
     billing_address TEXT NOT NULL,
     shipping_address TEXT NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
+    image_url VARCHAR(500),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -40,6 +41,7 @@ CREATE TABLE admins (
     email VARCHAR(255) UNIQUE NOT NULL,
     phone VARCHAR(255) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
+    image_url VARCHAR(500),
     categories TEXT[],
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
