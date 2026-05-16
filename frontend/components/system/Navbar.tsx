@@ -178,13 +178,13 @@ export default function Navbar() {
                     LOG IN / REGISTER
                   </Link>
                 ) : (
-                  <Link href="/user" className="text-sm font-semibold text-black hover:underline">
+                  <Link href="/system/user" className="text-sm font-semibold text-black hover:underline">
                     {userName ?? "Account"}
                   </Link>
                 )}
               </div>
 
-              <Link href="/user" className="relative inline-flex items-center justify-center w-10 h-10" aria-label="Go to user profile">
+              <Link href="/system/user" className="relative inline-flex items-center justify-center w-10 h-10" aria-label="Go to user profile">
                 <div className="w-10 h-10 bg-[#01A49E] rounded-full flex items-center justify-center text-sm font-bold text-white hover:bg-teal-600 transition">{avatarLetter}</div>
               </Link>
             </div>

@@ -6,14 +6,13 @@ export const PAGE_TITLES: Record<string, string> = {
   "/customer/product": "Product Details",
   "/customer/tennant": "Tenant",
   "/system/transaction-details": "Transaction Details",
-  "/customer": "Customer",
+  "/system/user": "User",
   "/home": "Home",
   "/tennant/product_add": "Add Product",
   "/tennant/product": "Products",
   "/tennant/t_dashboard": "Tenant Dashboard",
   "/tennant/t_transaction": "Transactions",
   "/tennant": "Tenant",
-  "/user": "User",
 };
 
 export function resolvePageHeaderTitle(pathname: string): string {
@@ -51,5 +50,5 @@ export function resolvePageHeaderAction(pathname: string): { label: string; href
 }
 
 export function shouldHidePageHeader(pathname: string): boolean {
-  return pathname === "/" || pathname === "/home" || pathname.startsWith("/admin") || pathname === "/user";
+  return pathname === "/" || pathname === "/home" || pathname.startsWith("/admin") || pathname === "/system/user";
 }

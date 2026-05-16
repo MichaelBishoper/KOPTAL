@@ -9,7 +9,7 @@ import type { AdminRow, CustomerRow, TenantRow } from "@/structure/db";
 type UserType = "customer" | "tenant" | "admin" | "guest";
 type UserRecord = AdminRow | CustomerRow | TenantRow;
 
-export default function UserPage() {
+export default function SystemUserPage() {
   const router = useRouter();
   const [userType, setUserType] = useState<UserType>("guest");
   const [userData, setUserData] = useState<UserRecord | null>(null);
@@ -30,7 +30,7 @@ export default function UserPage() {
       const userId = session.userId;
 
       if (role === "guest") {
-        router.replace("/login?next=/user");
+        router.replace("/login?next=/system/user");
         setLoading(false);
         return;
       }
@@ -45,14 +45,14 @@ export default function UserPage() {
       const user = await getUserByRoleAndId(role, userId) as UserRecord | null;
 
       if (!user) {
-        router.replace("/login?next=/user");
+        router.replace("/login?next=/system/user");
         return;
       }
 
       setUserData(user);
     } catch (error) {
       console.error("Failed to load user data:", error);
-      router.replace("/login?next=/user");
+      router.replace("/login?next=/system/user");
     } finally {
       setLoading(false);
     }
@@ -69,13 +69,11 @@ export default function UserPage() {
   return (
     <div className="min-h-screen bg-white py-8 px-4">
       <div className="max-w-4xl mx-auto rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-        {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-800">My Profile</h1>
           <p className="text-gray-600 mt-2">View and manage your account information</p>
         </div>
 
-        {/* User Profile */}
         <UserProfile
           user={userData}
           userType={userType}

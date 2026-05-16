@@ -1,18 +1,6 @@
 # Changes
 ## Admins Table
-Old:
-```sql
-create table admins (
-	manager_id serial primary key,
-	name varchar(100) unique not null,
-	email varchar(255) unique not null,
-	phone varchar(255) unique not null,
-	password_hash VARCHAR(255) not null,
-	created_at TIMESTAMP default current_timestamp
-);
-```
 
-New:
 ```sql
 CREATE TABLE admins (
     manager_id SERIAL PRIMARY KEY,
@@ -24,23 +12,8 @@ CREATE TABLE admins (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 ```
-	image_url VARCHAR(500), -- NEW
-## Tenants Table
-Old:
-```sql
-create table tenants (
-	tenant_id serial primary key,
-	name varchar(100) unique not null,
-	email varchar(255) unique not null,
-	phone varchar(255) unique not null,
-	verified boolean default false,
-	image_url VARCHAR(500), -- NEW
-	password_hash VARCHAR(255) not null,
-	created_at TIMESTAMP default current_timestamp
-);
-```
 
-New:
+## Tenants Table
 ```sql
 CREATE TABLE tenants (
     tenant_id SERIAL PRIMARY KEY,
@@ -55,19 +28,6 @@ CREATE TABLE tenants (
 );
 ```
 ## Products Table
-Old:
-```sql
-create table tenant_products (
-		product_id serial primary key,
-		tenant_id int not null references tenants(tenant_id) on delete cascade,
-		name varchar(255) unique not null,
-		quantity decimal(12,2) not null,
-		unit_id int not null references units(unit_id),
-		price decimal(10,2) not null
-);
-```
-
-New:
 ```sql
 create table tenant_products (
 		product_id serial primary key,

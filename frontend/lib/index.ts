@@ -1,19 +1,12 @@
 export { formatCurrency } from "./formatCurrency";
 export {
-  createTenantProductDraft,
-  deleteTenantProductDraft,
-  buildTenantProductSavePayload,
   createEmptyProductDraft,
   createProductDraftFromRow,
   hasApprovedCategory,
-  readImageFileAsDataUrl,
   saveTenantProductDraft,
-  updateTenantProductDraft,
-  type TenantProductSavePayload,
 } from "./editor/tenant-product";
 export { buildBasketSavePayload, saveBasketItemDraft, type BasketSavePayload } from "./editor/basket";
 export {
-  addBasketItem,
   clearBasketItems,
   getBasketItems,
   removeBasketItem,
@@ -31,27 +24,20 @@ export {
   upsertTenantCache,
 } from "./domain/tenants";
 export {
-  getAdmins,
   getAdminCategories,
   loadAdminSettings,
   saveAdminCategories,
   getTaxRate,
-  saveTaxRate,
-  resetTaxRate,
 } from "./domain/admins";
-export { getCustomers, getCustomerShippingAddressById, loadCustomers } from "./domain/customers";
+export { loadCustomers } from "./domain/customers";
 export { getUserByRoleAndId, saveUserProfileDraft, type EditableUserRow, type UserLookupRole } from "./domain/users";
 export {
-  getUnitById,
-  getUnitKind,
   getUnitLabel,
   getUnitPerPriceLabel,
   getUnitStep,
-  getUnits,
   loadUnits,
 } from "./domain/units";
 export {
-  getProductTenantName,
   loadTenantProductById,
   loadTenantProducts,
   getTenantProductById,
@@ -63,7 +49,6 @@ export {
 export {
   loadPurchaseOrders,
   getPurchaseOrders,
-  purchaseOrderRows,
   calculateOrderTotal,
   getStatusLabel,
   getStatusBadgeClass,

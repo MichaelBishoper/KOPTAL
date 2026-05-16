@@ -2,8 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
-import { ChevronLeftIcon } from "@heroicons/react/24/outline";
 import {
   createEmptyProductDraft,
   createProductDraftFromRow,
@@ -48,7 +46,6 @@ export default function ProductEditor({ mode, initialProduct }: ProductEditorPro
   };
 
   const saveLabel = mode === "add" ? "Create Product" : "Save Product";
-  const heading = mode === "add" ? "Add Product" : "Edit Product";
   const availabilityStep = draft.unitType === "grams" ? 100 : 1;
   const availabilityUnitLabel = draft.unitType === "grams" ? "grams" : "pieces";
 
