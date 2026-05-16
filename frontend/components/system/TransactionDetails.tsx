@@ -22,6 +22,15 @@ export function TransactionDetails() {
   const tenant = getTenantById(order.tenant_id);
   const tenantImage = order.tenantImage ?? getTenantProfileImage(tenant);
   const useNativeTenantImage = shouldUseNativeImage(tenantImage);
+  const customerImage = order.customerImage ?? "/product-placeholder.jpg";
+  const useNativeCustomerImage = shouldUseNativeImage(customerImage);
+  const customerName = order.customerName ?? `Customer #${order.customer_id}`;
+  const paymentMethod = (() => {
+    const notes = String(order.notes ?? "").trim();
+    const match = notes.match(/payment method\s*:\s*(.+)$/i);
+    if (match?.[1]) return match[1].trim();
+    return notes || "Not provided";
+  })();
   const statusClass = getStatusBadgeClass(order.status);
   const taxRate = getTaxRate();
   const taxAmount = Math.round(order.subtotal * (taxRate / 100));
@@ -51,17 +60,36 @@ export function TransactionDetails() {
               <span className="text-blue-600">👤</span> Customer Information
             </h2>
             <div className="space-y-4">
-              <div>
-                <p className="text-xs text-gray-500 uppercase font-semibold">Name</p>
-                <p className="text-gray-800 font-semibold">Customer #{order.customer_id}</p>
+              <div className="flex gap-4 pb-4 border-b">
+                {useNativeCustomerImage ? (
+                  <img
+                    src={customerImage}
+                    alt={customerName}
+                    className="w-16 h-16 rounded-lg object-cover border border-gray-200"
+                  />
+                ) : (
+                  <Image
+                    src={customerImage}
+                    alt={customerName}
+                    width={60}
+                    height={60}
+                    className="w-16 h-16 rounded-lg object-cover border border-gray-200"
+                  />
+                )}
+                <div>
+                  <p className="font-bold text-gray-800">{customerName}</p>
+                  <p className="text-sm text-gray-600">Customer #{order.customer_id}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-xs text-gray-500 uppercase font-semibold">Shipping Address</p>
-                <p className="text-gray-700">{order.shipping_address}</p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-500 uppercase font-semibold">Additional Notes</p>
-                <p className="text-gray-700">{order.notes || "No additional notes"}</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
+                  <p className="text-xs text-gray-500 uppercase font-semibold">Shipping Address</p>
+                  <p className="text-sm font-semibold text-gray-800">{order.shipping_address || "Not provided"}</p>
+                </div>
+                <div className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
+                  <p className="text-xs text-gray-500 uppercase font-semibold">Payment Method</p>
+                  <p className="text-sm font-semibold text-gray-800">{paymentMethod}</p>
+                </div>
               </div>
             </div>
           </div>
@@ -95,16 +123,15 @@ export function TransactionDetails() {
                       <p className="text-sm text-gray-600">{order.tenantLocation ?? tenant.location ?? "Location not specified"}</p>
                     </div>
                   </div>
-                  <div>
-                    <p className="text-xs text-gray-500 uppercase font-semibold">Contact</p>
-                    <p className="text-gray-700">{tenant.email}</p>
-                    <p className="text-gray-700">{tenant.phone}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 uppercase font-semibold">Status</p>
-                    <p className={tenant.verified ? "text-emerald-600 font-semibold" : "text-amber-600 font-semibold"}>
-                      {tenant.verified ? "✓ Verified" : "⏱ Pending Verification"}
-                    </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
+                      <p className="text-xs text-gray-500 uppercase font-semibold">Phone</p>
+                      <p className="text-sm font-semibold text-gray-800">{tenant.phone || "Not provided"}</p>
+                    </div>
+                    <div className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
+                      <p className="text-xs text-gray-500 uppercase font-semibold">Location</p>
+                      <p className="text-sm font-semibold text-gray-800">{order.tenantLocation ?? tenant.location ?? "Location not specified"}</p>
+                    </div>
                   </div>
                 </>
               ) : (
@@ -122,7 +149,7 @@ export function TransactionDetails() {
               <div key={idx} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
                 <div className="flex-1">
                   <p className="font-semibold text-gray-800">{item.name}</p>
-                  <p className="text-sm text-gray-600">Qty: {item.quantity}</p>
+                  <p className="text-sm text-gray-600">Qty: {item.quantity} {item.unitLabel}</p>
                 </div>
                 <div className="text-right">
                   <p className="font-semibold text-gray-800">Rp{formatCurrency(item.subtotal)}</p>

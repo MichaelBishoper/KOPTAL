@@ -18,7 +18,20 @@ export function getUnitById(unitId?: number): UnitRow | undefined {
   return cachedUnits.find((unit) => unit.unit_id === unitId);
 }
 
+export type ProductUnitKind = "grams" | "pieces";
+
+export function getUnitKind(unitId?: number): ProductUnitKind {
+  return unitId === 1 ? "grams" : "pieces";
+}
+
 export function getUnitLabel(unitId?: number): string {
-  const unit = getUnitById(unitId);
-  return unit?.unit_name ?? "Items";
+  return getUnitKind(unitId);
+}
+
+export function getUnitStep(unitId?: number): number {
+  return getUnitKind(unitId) === "grams" ? 100 : 1;
+}
+
+export function getUnitPerPriceLabel(unitId?: number): string {
+  return getUnitKind(unitId) === "grams" ? "100 grams" : "piece";
 }

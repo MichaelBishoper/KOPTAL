@@ -118,7 +118,7 @@ export default function TennantDashboardPage() {
                         </div>
                       </Link>
                     </div>
-                    <div className="p-4">
+                    <div className="p-4 min-h-[96px]">
                       <h3 className="font-semibold text-stone-900 truncate">{card.name}</h3>
                       <p className="text-sm text-stone-600 mt-1">Rp{formatCurrency(row.price)}</p>
                       <p className="text-xs text-stone-500 mt-1">{row.quantity} {getUnitLabel(row.unit_id)}</p>
@@ -136,9 +136,13 @@ export default function TennantDashboardPage() {
               {/* Add Product Card */}
               <Link
                 href="/tennant/product_add"
-                className="rounded-2xl border-2 border-dashed border-stone-300 bg-stone-50 overflow-hidden flex items-center justify-center aspect-square hover:border-teal-400 hover:bg-teal-50 transition-colors group"
+                className="relative flex flex-col rounded-2xl border-2 border-dashed border-stone-300 bg-stone-50 overflow-hidden shadow-sm hover:border-teal-400 hover:bg-teal-50 transition-colors group"
               >
-                <span className="text-5xl font-light text-stone-300 group-hover:text-teal-400 transition-colors leading-none">+</span>
+                <div className="relative w-full aspect-square" />
+                <div className="p-4 min-h-[96px]" />
+                <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                  <span className="text-5xl font-light text-stone-300 group-hover:text-teal-400 transition-colors leading-none">+</span>
+                </div>
               </Link>
             </div>
           </section>

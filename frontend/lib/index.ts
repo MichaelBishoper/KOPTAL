@@ -27,6 +27,7 @@ export {
   getTenants,
   loadTenants,
   shouldUseNativeImage,
+  safeImageSrc,
   upsertTenantCache,
 } from "./domain/tenants";
 export {
@@ -40,7 +41,15 @@ export {
 } from "./domain/admins";
 export { getCustomers, getCustomerShippingAddressById, loadCustomers } from "./domain/customers";
 export { getUserByRoleAndId, saveUserProfileDraft, type EditableUserRow, type UserLookupRole } from "./domain/users";
-export { getUnitById, getUnitLabel, getUnits, loadUnits } from "./domain/units";
+export {
+  getUnitById,
+  getUnitKind,
+  getUnitLabel,
+  getUnitPerPriceLabel,
+  getUnitStep,
+  getUnits,
+  loadUnits,
+} from "./domain/units";
 export {
   getProductTenantName,
   loadTenantProductById,

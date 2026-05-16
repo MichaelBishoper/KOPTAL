@@ -12,6 +12,7 @@ import {
   hasApprovedCategory,
   loadAdminSettings,
   saveTenantProductDraft,
+  shouldUseNativeImage,
 } from "@/lib";
 import { fetchAuthSessionFromAPI } from "@/fetch/auth";
 import { uploadImageFileOnAPI } from "@/fetch/file-upload";
@@ -48,6 +49,8 @@ export default function ProductEditor({ mode, initialProduct }: ProductEditorPro
 
   const saveLabel = mode === "add" ? "Create Product" : "Save Product";
   const heading = mode === "add" ? "Add Product" : "Edit Product";
+  const availabilityStep = draft.unitType === "grams" ? 100 : 1;
+  const availabilityUnitLabel = draft.unitType === "grams" ? "grams" : "pieces";
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -106,13 +109,22 @@ export default function ProductEditor({ mode, initialProduct }: ProductEditorPro
           <aside className="lg:sticky lg:top-[136px] self-start">
             <div className="rounded-3xl border border-stone-200 bg-white p-6 shadow-sm flex flex-col items-center text-center">
               <div className="h-56 w-56 sm:h-72 sm:w-72 rounded-3xl overflow-hidden border border-stone-200 bg-stone-100">
-                <Image
-                  src={draft.images[0] || "/product-placeholder.jpg"}
-                  alt={draft.name || "Product preview"}
-                  width={448}
-                  height={448}
-                  className="h-full w-full object-cover"
-                />
+                {(() => {
+                  const src = draft.images[0] || "/product-placeholder.jpg";
+                  if (shouldUseNativeImage(src)) {
+                    // eslint-disable-next-line @next/next/no-img-element
+                    return <img src={src} alt={draft.name || "Product preview"} className="h-full w-full object-cover" />;
+                  }
+                  return (
+                    <Image
+                      src={src}
+                      alt={draft.name || "Product preview"}
+                      width={448}
+                      height={448}
+                      className="h-full w-full object-cover"
+                    />
+                  );
+                })()}
               </div>
 
               <label className="mt-4 inline-flex cursor-pointer items-center justify-center rounded-2xl border border-stone-300 bg-white px-4 py-2 text-sm font-semibold text-stone-700 hover:bg-stone-50">
@@ -176,15 +188,28 @@ export default function ProductEditor({ mode, initialProduct }: ProductEditorPro
                       className="rounded-xl border border-stone-300 px-4 py-3 outline-none focus:border-teal-600 bg-white"
                     >
                       <option value="pieces">Pieces</option>
-                      <option value="grams">Grams</option>
+                      <option value="grams">100 Grams</option>
                     </select>
                   </label>
 
                   <label className="flex flex-col gap-2 text-sm font-medium text-stone-700">
                     Availability
                     <input
+                      type="number"
                       value={draft.availability}
-                      onChange={(event) => updateField("availability", event.target.value)}
+                      min={0}
+                      step={availabilityStep}
+                      onChange={(event) => {
+                        const raw = Number(event.target.value);
+                        if (!Number.isFinite(raw)) {
+                          updateField("availability", "0");
+                          return;
+                        }
+                        const snapped = draft.unitType === "grams"
+                          ? Math.max(0, Math.round(raw / 100) * 100)
+                          : Math.max(0, Math.round(raw));
+                        updateField("availability", String(snapped));
+                      }}
                       className="rounded-xl border border-stone-300 px-4 py-3 outline-none focus:border-teal-600"
                       placeholder="50"
                       inputMode="numeric"
@@ -225,7 +250,7 @@ export default function ProductEditor({ mode, initialProduct }: ProductEditorPro
 
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-[0.2em] text-stone-500">Stock</p>
-                    <p className="mt-1 text-base font-semibold text-stone-900">{draft.availability} items</p>
+                    <p className="mt-1 text-base font-semibold text-stone-900">{draft.availability} {availabilityUnitLabel}</p>
                   </div>
 
                 </div>

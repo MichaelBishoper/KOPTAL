@@ -2,7 +2,7 @@ import type { TenantProductRow } from "@/structure/db";
 import { fetchTenantProductByIdFromAPI, fetchTenantProductsFromAPI } from "@/fetch/tenant-products";
 import { fetchTenantsFromAPI } from "@/fetch/tenants";
 import { getTenantById, getTenantByName, getTenantProfileImage } from "./tenants";
-import { getUnitById } from "./units";
+import { getUnitLabel } from "./units";
 
 let cachedTenantProducts: TenantProductRow[] = [];
 
@@ -84,7 +84,6 @@ export async function loadTenantProductById(productId?: number | string): Promis
 export function toCatalogCard(product: TenantProductRow): TenantProductCard {
   const tenant = getTenantById(product.tenant_id);
   const attached = getAttachedTenantMeta(product);
-  const unit = getUnitById(product.unit_id);
 
   return {
     id: String(product.product_id),
@@ -94,7 +93,7 @@ export function toCatalogCard(product: TenantProductRow): TenantProductCard {
     location: attached.location ?? tenant?.location ?? "",
     price: product.price,
     quantity: product.quantity,
-    unitLabel: unit?.unit_name ?? "Items",
+    unitLabel: getUnitLabel(product.unit_id),
   };
 }
 

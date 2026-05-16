@@ -36,6 +36,9 @@ build/
 .next/
 out/
 
+# Local uploads and runtime files
+uploads/
+
 # OS files
 Thumbs.db
 .DS_Store

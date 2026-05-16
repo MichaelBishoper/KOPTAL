@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { saveUserProfileDraft } from "@/lib";
+import { saveUserProfileDraft, shouldUseNativeImage, safeImageSrc } from "@/lib";
 import { AdminRow, CustomerRow, TenantRow } from "@/structure/db";
 import { uploadImageFileOnAPI } from "@/fetch/file-upload";
 
@@ -194,15 +194,10 @@ export function UserProfile({ user, userType, onLogout, loggingOut }: UserProfil
     (typeof userRecord.image === "string" && userRecord.image) ||
     (typeof userRecord.image_url === "string" && userRecord.image_url) ||
     undefined;
-  const profileImageSrc =
-    (isEditing ? localPreviewImage ?? draft.image : undefined) ||
-    storedProfileImage ||
-    "/product-placeholder.jpg";
-  const useNativePreviewImage =
-    profileImageSrc.startsWith("blob:") ||
-    profileImageSrc.startsWith("data:") ||
-    profileImageSrc.startsWith("http://localhost:3002/") ||
-    profileImageSrc.startsWith("http://127.0.0.1:3002/");
+  const profileImageSrc = safeImageSrc(
+    (isEditing ? localPreviewImage ?? draft.image : undefined) || storedProfileImage,
+  );
+  const useNativePreviewImage = shouldUseNativeImage(profileImageSrc);
 
   return (
     <div className="bg-white rounded-lg p-8">
@@ -385,21 +380,10 @@ function TenantDetails({
   get: (key: string) => string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }) {
-  const verificationBadge = tenant.verified ? (
-    <span className="inline-block bg-emerald-100 text-emerald-700 text-xs font-bold px-3 py-1 rounded-full">
-      ✓ Verified
-    </span>
-  ) : (
-    <span className="inline-block bg-amber-100 text-amber-700 text-xs font-bold px-3 py-1 rounded-full">
-      ⏱ Pending Verification
-    </span>
-  );
-
   return (
     <div className="border-t pt-6">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-bold text-gray-700 uppercase">Shop Status</h3>
-        {verificationBadge}
+      <div className="mb-4">
+        <h3 className="text-sm font-bold text-gray-700 uppercase">Shop Details</h3>
       </div>
 
       <div className="space-y-4">

@@ -10,6 +10,7 @@ import {
 	getStatusBadgeClass,
 	getStatusLabel,
 	isAcceptedOrderStatus,
+	safeImageSrc,
 	shouldUseNativeImage,
 	loadPurchaseOrders,
 } from "@/lib";
@@ -79,8 +80,9 @@ export default function TennantTransactions() {
 						const normalizedStatus = currentStatus.toLowerCase();
 						const isAccepted = isAcceptedOrderStatus(currentStatus);
 						const isLocked = isAccepted || normalizedStatus === "cancelled";
-						const tenantImage = order.tenantImage ?? order.items[0]?.image ?? "/product-placeholder.jpg";
-						const useNativeTenantImage = shouldUseNativeImage(tenantImage);
+						const customerImage = safeImageSrc(order.customerImage) || "/product-placeholder.jpg";
+						const useNativeCustomerImage = shouldUseNativeImage(customerImage);
+						const customerName = order.customerName ?? order.name;
 
 						return (
 							<div key={order.id} className="border-2 border-gray-300 rounded-xl overflow-hidden bg-white">
@@ -99,16 +101,16 @@ export default function TennantTransactions() {
 									<div className="flex items-start justify-between gap-4">
 										<div className="flex items-start gap-4 min-w-0">
 											<div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden border border-gray-200 bg-gray-100 flex-shrink-0">
-													{useNativeTenantImage ? (
+													{useNativeCustomerImage ? (
 														<img
-															src={tenantImage}
-															alt={order.tenantName ?? order.name}
+															src={customerImage}
+															alt={customerName}
 															className="h-full w-full object-cover"
 														/>
 													) : (
 														<Image
-															src={tenantImage}
-															alt={order.tenantName ?? order.name}
+															src={customerImage}
+															alt={customerName}
 															fill
 															className="object-cover"
 														/>
@@ -184,7 +186,7 @@ export default function TennantTransactions() {
 
 														<div className="min-w-0">
 															<p className="text-sm font-semibold text-gray-900 truncate">{item.name}</p>
-															<p className="text-sm text-gray-600 mt-1">Product Quantity: {item.quantity}</p>
+															<p className="text-sm text-gray-600 mt-1">Qty: {item.quantity} {item.unitLabel}</p>
 														</div>
 
 														<div className="text-right">

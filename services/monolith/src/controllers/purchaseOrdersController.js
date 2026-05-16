@@ -1,6 +1,7 @@
 const PO = require('../dao/purchaseOrdersDao');
 const LineItem = require('../dao/lineItemsDao');
 const { AppError } = require('../../middleware/errorHandler');
+const pool = require('../config/db');
 
 // Create purchase order
 async function createPurchaseOrder(req, res, next) {
@@ -92,6 +93,8 @@ async function updateOrderStatus(req, res, next) {
             throw new AppError('Status is required', 400);
         }
 
+        const currentStatus = String(order.status || '').toLowerCase();
+
         if (req.user.user_type === 'tenant') {
             if (order.tenant_id !== req.user.user_id) {
                 throw new AppError('This order belongs to another tenant', 403);
@@ -104,6 +107,10 @@ async function updateOrderStatus(req, res, next) {
             if (String(order.status).toLowerCase() === 'delivered') {
                 throw new AppError('Delivered order is locked', 400);
             }
+
+            if (currentStatus === 'cancelled') {
+                throw new AppError('Cancelled order is already locked', 400);
+            }
         } else if (req.user.user_type === 'customer') {
             if (order.customer_id !== req.user.user_id) {
                 throw new AppError('This order belongs to another customer', 403);
@@ -113,7 +120,6 @@ async function updateOrderStatus(req, res, next) {
                 throw new AppError('Customers can only set status to delivered', 400);
             }
 
-            const currentStatus = String(order.status).toLowerCase();
             if (currentStatus === 'cancelled') {
                 throw new AppError('Cancelled order cannot be marked delivered', 400);
             }
@@ -125,8 +131,29 @@ async function updateOrderStatus(req, res, next) {
             throw new AppError('Only tenants or customers can update order status', 403);
         }
 
-        const updated = await PO.updateOrderStatus(req.params.id, requestedStatus);
-        res.json(updated);
+        const shouldRestock = req.user.user_type === 'tenant' && requestedStatus === 'cancelled' && currentStatus !== 'cancelled';
+
+        if (!shouldRestock) {
+            const updated = await PO.updateOrderStatus(req.params.id, requestedStatus);
+            res.json(updated);
+            return;
+        }
+
+        const client = await pool.connect();
+        try {
+            await client.query('BEGIN');
+
+            await LineItem.restockLineItemsByOrderId(order.po_id, client);
+            const updated = await PO.updateOrderStatus(req.params.id, requestedStatus, client);
+
+            await client.query('COMMIT');
+            res.json(updated);
+        } catch (error) {
+            await client.query('ROLLBACK');
+            throw error;
+        } finally {
+            client.release();
+        }
     } catch (error) {
         next(error);
     }

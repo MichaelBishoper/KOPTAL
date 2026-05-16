@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { ChevronLeftIcon, TrashIcon } from "@heroicons/react/24/outline";
-import { formatCurrency, getAuthSession, getBasketItems, getTaxRate, getTenantById, getTenantProfileImage, removeBasketItem, shouldUseNativeImage, type BasketItem } from "@/lib";
+import { formatCurrency, getAuthSession, getBasketItems, getTaxRate, getTenantById, getTenantProfileImage, getUnitLabel, removeBasketItem, shouldUseNativeImage, type BasketItem } from "@/lib";
 
 type BasketGroup = {
   tenantId: number;
@@ -162,7 +162,7 @@ export default function Basket() {
 
                         <div className="min-w-0">
                           <p className="text-lg font-semibold text-gray-900 truncate">{item.name}</p>
-                          <p className="mt-1 text-sm text-gray-600">Qty: {item.quantity}</p>
+                          <p className="mt-1 text-sm text-gray-600">Qty: {item.quantity} {getUnitLabel(item.unit_id)}</p>
                           <p className="mt-1 text-sm font-medium text-gray-800">Rp{formatCurrency(item.subtotal)}</p>
                         </div>
 

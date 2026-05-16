@@ -39,8 +39,16 @@ export function shouldUseNativeImage(src?: string | null): boolean {
     value.startsWith("blob:") ||
     value.startsWith("data:") ||
     value.startsWith("http://localhost:3002/") ||
-    value.startsWith("http://127.0.0.1:3002/")
+    value.startsWith("http://127.0.0.1:3002/") ||
+    value.startsWith("http://localhost:3000/") ||
+    value.startsWith("http://127.0.0.1:3000/")
   );
+}
+
+export function safeImageSrc(src?: string | null): string {
+  const value = typeof src === "string" ? src.trim() : "";
+  if (!value) return TENANT_IMAGE_FALLBACK;
+  return value;
 }
 
 export function upsertTenantCache(tenant: TenantRow): void {

@@ -18,6 +18,7 @@ export type CustomerRow = {
   billing_address: string;
   shipping_address: string;
   password_hash: string;
+  image_url?: string;
   created_at: string;
 };
 

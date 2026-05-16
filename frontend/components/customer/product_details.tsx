@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import ProductCartBox from "@/components/customer/product_cart_box";
-import { formatCurrency, getUnitLabel, shouldUseNativeImage, toProductDetails, type TenantProductDetails } from "@/lib";
+import { formatCurrency, getUnitPerPriceLabel, shouldUseNativeImage, safeImageSrc, toProductDetails, type TenantProductDetails } from "@/lib";
 
 interface ProductDetailsProps {
   product: TenantProductDetails;
@@ -17,9 +17,10 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
   const images = details.images ?? [details.image ?? "/product-placeholder.jpg"];
   const unitPrice = product.price;
   const resolvedDescription = details.description ?? "No description has been added for this product yet.";
-  const unitLabel = getUnitLabel(product.unit_id) === "Gram" ? "gram" : "piece";
+  const unitPriceLabel = getUnitPerPriceLabel(product.unit_id);
   const categoryLabel = details.category?.trim() || "Uncategorized";
-  const tenantImageSrc = details.tenantImage ?? "/product-placeholder.jpg";
+  const tenantImageSrcRaw = details.tenantImage ?? "/product-placeholder.jpg";
+  const tenantImageSrc = safeImageSrc(tenantImageSrcRaw);
   const useNativeTenantImage = shouldUseNativeImage(tenantImageSrc);
 
   return (
@@ -29,31 +30,40 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
         <div className="flex flex-col gap-4">
           {/* Main Image */}
           <div className="relative w-full aspect-square bg-gray-100 rounded-lg overflow-hidden border border-gray-300">
-            <Image
-              src={images[selectedImage]}
-              alt={`${details.name} - Image ${selectedImage + 1}`}
-              fill
-              className="object-cover"
-              priority
-            />
+            {(() => {
+              const src = safeImageSrc(images[selectedImage]) || "/product-placeholder.jpg";
+              if (shouldUseNativeImage(src)) {
+                // eslint-disable-next-line @next/next/no-img-element
+                return <img src={src} alt={`${details.name} - Image ${selectedImage + 1}`} className="object-cover w-full h-full" />;
+              }
+              return <Image src={src} alt={`${details.name} - Image ${selectedImage + 1}`} fill className="object-cover" priority />;
+            })()}
           </div>
 
           {/* Thumbnail Images */}
           {images.length > 1 && (
             <div className="flex gap-3">
-              {images.map((image, index) => (
-                <button
-                  key={index}
-                  onClick={() => setSelectedImage(index)}
-                  className={`relative w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${
-                    selectedImage === index
-                      ? "border-teal-600"
-                      : "border-gray-300 hover:border-gray-400"
-                  }`}
-                >
-                  <Image src={image} alt={`Thumbnail ${index + 1}`} fill className="object-cover" />
-                </button>
-              ))}
+              {images.map((image, index) => {
+                const thumbSrc = safeImageSrc(image) || "/product-placeholder.jpg";
+                return (
+                  <button
+                    key={index}
+                    onClick={() => setSelectedImage(index)}
+                    className={`relative w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${
+                      selectedImage === index
+                        ? "border-teal-600"
+                        : "border-gray-300 hover:border-gray-400"
+                    }`}
+                  >
+                    {shouldUseNativeImage(thumbSrc) ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={thumbSrc} alt={`Thumbnail ${index + 1}`} className="object-cover w-full h-full" />
+                    ) : (
+                      <Image src={thumbSrc} alt={`Thumbnail ${index + 1}`} fill className="object-cover" />
+                    )}
+                  </button>
+                );
+              })}
             </div>
           )}
         </div>
@@ -66,7 +76,7 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
             <div className="flex items-baseline gap-2">
               <span className="text-5xl font-bold text-gray-800">Rp{formatCurrency(unitPrice)}</span>
               <span className="text-lg text-gray-600">
-                per {unitLabel}
+                per {unitPriceLabel}
               </span>
             </div>
             <div className="mb-3 mt-4">

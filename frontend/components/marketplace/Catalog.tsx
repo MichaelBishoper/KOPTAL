@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { formatCurrency, getTenantProducts, toCatalogCard, filterProductsBySearch, type TenantProductCard } from "@/lib";
+import { formatCurrency, getTenantProducts, toCatalogCard, filterProductsBySearch, shouldUseNativeImage, safeImageSrc, type TenantProductCard } from "@/lib";
 
 interface CatalogProps {
   products?: TenantProductCard[];
@@ -37,12 +37,14 @@ export default function Catalog({ products = [], columns = 4, searchQuery = "" }
           >
             <Link href={`/customer/product/${product.id}`} className="block cursor-pointer">
               <div className="relative w-full aspect-square bg-gray-100">
-                <Image
-                  src={product.image || "/product-placeholder.jpg"}
-                  alt={product.name}
-                  fill
-                  className="object-cover"
-                />
+                {(() => {
+                  const src = safeImageSrc(product.image) || "/product-placeholder.jpg";
+                  if (shouldUseNativeImage(src)) {
+                    // eslint-disable-next-line @next/next/no-img-element
+                    return <img src={src} alt={product.name} className="object-cover w-full h-full" />;
+                  }
+                  return <Image src={src} alt={product.name} fill className="object-cover" />;
+                })()}
               </div>
 
               <div className="p-4 pb-3">

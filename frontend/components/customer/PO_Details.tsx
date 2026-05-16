@@ -34,12 +34,17 @@ export default function PO_Details() {
     setItems(purchaseOrder.items);
   };
 
-  const updateQuantity = (itemId: string, delta: number) => {
+  const getItemStep = (unitLabel: string) => (unitLabel === "grams" ? 100 : 1);
+
+  const updateQuantity = (itemId: string, direction: 1 | -1) => {
     setItems((currentItems) =>
       currentItems
-        .map((item) =>
-          item.id === itemId ? { ...item, quantity: Math.max(1, item.quantity + delta) } : item,
-        )
+        .map((item) => {
+          if (item.id !== itemId) return item;
+          const step = getItemStep(item.unitLabel);
+          const minValue = step;
+          return { ...item, quantity: Math.max(minValue, item.quantity + (direction * step)) };
+        })
         .filter(Boolean),
     );
   };
@@ -107,7 +112,7 @@ export default function PO_Details() {
                     <div className="min-w-0">
                       <p className="text-sm font-semibold text-gray-500">Product Name</p>
                       <p className="text-lg font-semibold text-gray-900 truncate">{item.name}</p>
-                      <p className="text-sm text-gray-600 mt-1">Product Quantity: {item.quantity}</p>
+                      <p className="text-sm text-gray-600 mt-1">Qty: {item.quantity} {item.unitLabel}</p>
                     </div>
                     <div className="text-right flex-shrink-0">
                       <p className="text-sm font-semibold text-gray-500">Price</p>

@@ -228,7 +228,7 @@ export default function History() {
 
                           <div className="min-w-0">
                             <p className="text-sm font-semibold text-gray-900 truncate">{product.name}</p>
-                            <p className="text-sm text-gray-600 mt-1">Product Quantity: {product.quantity}</p>
+                            <p className="text-sm text-gray-600 mt-1">Qty: {product.quantity} {product.unitLabel}</p>
                           </div>
 
                           <div className="text-right">

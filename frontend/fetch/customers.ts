@@ -4,6 +4,7 @@ type PublicCustomer = {
   customer_id?: number;
   name?: string;
   company?: string;
+  image_url?: string;
 };
 
 function toCustomerRow(raw: PublicCustomer, index: number): CustomerRow {
@@ -19,6 +20,7 @@ function toCustomerRow(raw: PublicCustomer, index: number): CustomerRow {
     billing_address: "",
     shipping_address: "",
     password_hash: "",
+    image_url: typeof raw.image_url === "string" ? raw.image_url : undefined,
     created_at: new Date().toISOString(),
   };
 }

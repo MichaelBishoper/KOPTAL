@@ -33,7 +33,8 @@ router.get('/customers', async (req, res, next) => {
         const safeCustomers = customers.map(c => ({
             customer_id: c.customer_id,
             name: c.name,
-            company: c.company
+            company: c.company,
+            image_url: c.image_url ?? null,
         }));
         
         res.json(safeCustomers);

@@ -30,8 +30,8 @@ async function getPurchaseOrdersByTenant(tenant_id) {
 }
 
 // Update
-async function updateOrderStatus(po_id, status) {
-    const result = await pool.query(
+async function updateOrderStatus(po_id, status, dbClient = pool) {
+    const result = await dbClient.query(
         `UPDATE purchase_orders SET status = $1 WHERE po_id = $2 RETURNING *`,
         [status, po_id]
     );
