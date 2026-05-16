@@ -1,4 +1,16 @@
 export { formatCurrency } from "./formatCurrency";
+export {
+  createTenantProductDraft,
+  deleteTenantProductDraft,
+  buildTenantProductSavePayload,
+  createEmptyProductDraft,
+  createProductDraftFromRow,
+  hasApprovedCategory,
+  readImageFileAsDataUrl,
+  saveTenantProductDraft,
+  updateTenantProductDraft,
+  type TenantProductSavePayload,
+} from "./editor/tenant-product";
 export { buildBasketSavePayload, saveBasketItemDraft, type BasketSavePayload } from "./editor/basket";
 export {
   addBasketItem,
