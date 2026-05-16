@@ -63,7 +63,7 @@ export default function AppShell({
     <>
       <Navbar />
       <ScrollToTop />
-      <div className="pt-[150px]">
+  <div className="pt-[150px]">
         <PageHeader />
         {children}
       </div>

@@ -3,9 +3,9 @@
     const router = express.Router();
     const jwt = require('jsonwebtoken')
     const { verifyToken } = require('../middleware/auth');
-    const { getTenantById, getTenantByEmail, createTenant, updateTenant } = require('../dao/tenantDao');
-    const { getCustomerById, getCustomerByEmail, createCustomer, updateCustomer } = require('../dao/customerDao');
-    const { getAdminById, getAdminByEmail, createAdmin, updateAdmin } = require('../dao/adminDao');
+    const { getTenantById, getTenantByEmail, createTenant, updateTenant, updatePassword: updateTenantPassword } = require('../dao/tenantDao');
+    const { getCustomerById, getCustomerByEmail, createCustomer, updateCustomer, updatePassword: updateCustomerPassword } = require('../dao/customerDao');
+    const { getAdminById, getAdminByEmail, createAdmin, updateAdmin, updatePassword: updateAdminPassword } = require('../dao/adminDao');
     const { comparePassword, hashPassword } = require('../utils/hashPasswords');
     const { AppError } = require('../middleware/errorHandler');
 
@@ -84,6 +84,55 @@
             }
 
             res.status(201).json({ message: `${user_type} created successfully`, id: result.id });
+        } catch (err) {
+            return next(err);
+        }
+    });
+
+    // Protected route to change password for the authenticated user
+    router.post('/change-password', verifyToken, async (req, res, next) => {
+        try {
+            const { currentPassword, newPassword } = req.body;
+
+            if (!currentPassword || !newPassword) {
+                return next(new AppError('Missing password fields', 400));
+            }
+
+            const { user_id, user_type } = req.user;
+
+            // Load the user record depending on the role
+            let user;
+            if (user_type === 'tenant') {
+                user = await withDbTimeout(getTenantById(user_id));
+            } else if (user_type === 'customer') {
+                user = await withDbTimeout(getCustomerById(user_id));
+            } else if (user_type === 'admin') {
+                user = await withDbTimeout(getAdminById(user_id));
+            } else {
+                return next(new AppError('Invalid user type', 400));
+            }
+
+            if (!user) {
+                return next(new AppError('User not found', 404));
+            }
+
+            // Verify current password
+            const matches = await comparePassword(currentPassword, user.password_hash);
+            if (!matches) {
+                return next(new AppError('Current password is incorrect', 401));
+            }
+
+            // Hash and update
+            const hashed = await hashPassword(newPassword);
+            if (user_type === 'tenant') {
+                await withDbTimeout(updateTenantPassword(user_id, hashed));
+            } else if (user_type === 'customer') {
+                await withDbTimeout(updateCustomerPassword(user_id, hashed));
+            } else if (user_type === 'admin') {
+                await withDbTimeout(updateAdminPassword(user_id, hashed));
+            }
+
+            res.json({ message: 'Password updated successfully' });
         } catch (err) {
             return next(err);
         }

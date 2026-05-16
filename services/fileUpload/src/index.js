@@ -8,7 +8,16 @@ const path = require('path');
 const app = express();
 
 // upload directory
+const fs = require('fs');
 const UPLOAD_DIR = process.env.UPLOAD_DIR || 'src/uploads/';
+
+// Ensure upload directory exists at startup
+try {
+  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+  console.log('Ensured upload directory exists:', UPLOAD_DIR);
+} catch (err) {
+  console.error('Failed to ensure upload directory:', err);
+}
 
 // storage config
 const storage = multer.diskStorage({
@@ -49,8 +58,11 @@ app.post('/upload', upload.single('file'), async (req, res) => {
       [
         entity_type,
         Number(entity_id),
-        req.file.originalname,
-        req.file.path,
+          req.file.originalname,
+          // store an absolute path to avoid confusion between host/container mounts
+          (req.file && req.file.destination && req.file.filename)
+            ? path.resolve(req.file.destination, req.file.filename)
+            : (req.file.path || null),
         req.file.mimetype,
         req.file.size
       ]
@@ -63,8 +75,8 @@ app.post('/upload', upload.single('file'), async (req, res) => {
       url: `${process.env.BASE_URL}/files/${file.file_id}`
     });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Database insert failed' });
+    console.error('File upload handler error:', err && err.stack ? err.stack : err);
+    res.status(500).json({ error: 'Database insert failed', details: (err && err.message) ? err.message : String(err) });
   }
 });
 
@@ -85,14 +97,21 @@ app.get('/files/:file_id', async (req, res) => {
 
     const file = result.rows[0];
 
-    console.log('Serving file from:', file.file_path);
+    // Resolve path and ensure file exists
+    const fullPath = path.isAbsolute(file.file_path) ? file.file_path : path.resolve(process.cwd(), file.file_path || '');
+    console.log('Attempting to serve file from:', fullPath);
 
     res.setHeader('Content-Type', file.mime_type);
 
-    res.sendFile(file.file_path, (err) => {
+    if (!fullPath || !fs.existsSync(fullPath)) {
+      console.error('File missing on disk:', fullPath);
+      return res.status(404).json({ error: 'File not found on disk', path: fullPath });
+    }
+
+    res.sendFile(fullPath, (err) => {
       if (err) {
         console.error('SendFile error:', err);
-        res.status(404).json({ error: 'File not found on disk' });
+        if (!res.headersSent) res.status(404).json({ error: 'File not found on disk' });
       }
     });
 

@@ -119,7 +119,7 @@ export default function Navbar() {
                 onMouseLeave={() => setPagesOpen(false)}
               >
                 <button
-                  className={`text-base font-bold border-b-3 flex items-center gap-2 hover:pb-1 transition ${
+                  className={`text-base font-bold border-b-3 flex items-center gap-2 hover:pb-1 transition no-pointer ${
                     isPagesActive ? "text-black border-[#01A49E]" : "text-gray-800 border-transparent hover:text-black hover:border-[#01A49E]"
                   }`}
                 >

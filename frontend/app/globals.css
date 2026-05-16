@@ -5,3 +5,9 @@ html, body, #__next {
 }
 
 a { text-decoration: none; }
+
+/* Make interactive controls show the pointing hand by default */
+button { cursor: pointer; }
+
+/* Allow opt-out for elements that open menus on hover (e.g., top-level Pages nav) */
+.no-pointer { cursor: default !important; }

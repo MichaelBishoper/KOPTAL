@@ -27,12 +27,19 @@ async function proxy(request: NextRequest, context: RouteContext): Promise<NextR
 
   try {
     const upstream = await fetch(targetUrl, init);
-    const body = await upstream.arrayBuffer();
     const responseHeaders = new Headers();
     const upstreamType = upstream.headers.get("content-type");
     if (upstreamType) responseHeaders.set("content-type", upstreamType);
 
-    return new NextResponse(body, {
+    const buf = await upstream.arrayBuffer();
+    if (!upstream.ok) {
+      // try to extract text/json body for debugging
+      let debugBody = null;
+      try { debugBody = await new TextDecoder().decode(buf); } catch (e) { /* ignore */ }
+      return new NextResponse(JSON.stringify({ error: 'Upstream fileupload error', status: upstream.status, body: debugBody }), { status: 502, headers: { 'content-type': 'application/json' } });
+    }
+
+    return new NextResponse(buf, {
       status: upstream.status,
       headers: responseHeaders,
     });

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import ChangePasswordButton from "./ChangePasswordButton";
 import { saveUserProfileDraft, shouldUseNativeImage, safeImageSrc } from "@/lib";
 import { AdminRow, CustomerRow, TenantRow } from "@/structure/db";
 import { uploadImageFileOnAPI } from "@/fetch/file-upload";
@@ -265,6 +266,7 @@ export function UserProfile({ user, userType, onLogout, loggingOut }: UserProfil
                 >
                   Edit Profile
                 </button>
+                          <ChangePasswordButton />
                 {onLogout ? (
                   <button
                     onClick={onLogout}
