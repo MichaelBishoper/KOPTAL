@@ -15,6 +15,7 @@ Frontend expects these exact TypeScript types from backend:
   name: string;
   email: string;
   phone: string;
+  cooperative_id_number: string;
   categories: string[];           // List of approved categories
   password_hash: string;
   created_at: string;             // ISO format "2024-01-15T10:30:00Z"
@@ -33,7 +34,8 @@ Frontend expects these exact TypeScript types from backend:
   email: string;
   phone: string;
   company: string;
-  tax_id: string;
+  business_id_number: string;
+  corporate_tax_id: string;
   billing_address: string;
   shipping_address: string;
   password_hash: string;
@@ -52,6 +54,7 @@ Frontend expects these exact TypeScript types from backend:
   name: string;
   email: string;
   phone: string;
+  national_id_number: string;
   verified: boolean;
   location?: string;              // City/region (displayed next to product)
   image?: string;                 // Shop logo/image

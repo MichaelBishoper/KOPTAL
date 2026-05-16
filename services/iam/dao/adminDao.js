@@ -2,12 +2,12 @@ const client = require('../db');
 
 // Create
 async function createAdmin(adminData) {
-    const { name, email, phone, password_hash } = adminData;
+    const { name, email, phone, cooperative_id_number, password_hash } = adminData;
     const result = await client.query(
-        `INSERT INTO admins (name, email, phone, password_hash)
-         VALUES ($1, $2, $3, $4)
+        `INSERT INTO admins (name, email, phone, cooperative_id_number, password_hash)
+         VALUES ($1, $2, $3, $4, $5)
          RETURNING *`,
-        [name, email, phone, password_hash]
+        [name, email, phone, cooperative_id_number, password_hash]
     );
     return result.rows[0];
 }
@@ -36,15 +36,15 @@ async function getAdminByEmail(email) {
 
 // Update
 async function updateAdmin(id, adminData) {
-    const { name, email, phone, image_url, image } = adminData;
+    const { name, email, phone, cooperative_id_number, image_url, image } = adminData;
     const normalizedImage = image_url ?? image ?? null;
     const result = await client.query(
         `UPDATE admins
-         SET name = $1, email = $2, phone = $3,
-             image_url = COALESCE($5, image_url)
-         WHERE manager_id = $4
+         SET name = $1, email = $2, phone = $3, cooperative_id_number = $4,
+             image_url = COALESCE($6, image_url)
+         WHERE manager_id = $5
          RETURNING *`,
-        [name, email, phone, id, normalizedImage || null]
+        [name, email, phone, cooperative_id_number, id, normalizedImage || null]
     );
     return result.rows[0];
 }

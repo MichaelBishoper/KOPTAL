@@ -2,11 +2,11 @@ const client = require('../db')
 
 // Create
 async function createCustomer(customerData) {
-    const { name, email, phone, company, tax_id, billing_address, shipping_address, password_hash } = customerData;
+    const { name, email, phone, company, business_id_number, corporate_tax_id, billing_address, shipping_address, password_hash } = customerData;
     const result = await client.query(
-        `INSERT INTO customers (name, email, phone, company, tax_id, billing_address, shipping_address, password_hash)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-        RETURNING *`, [name, email, phone, company, tax_id, billing_address, shipping_address, password_hash ]
+        `INSERT INTO customers (name, email, phone, company, business_id_number, corporate_tax_id, billing_address, shipping_address, password_hash)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        RETURNING *`, [name, email, phone, company, business_id_number, corporate_tax_id, billing_address, shipping_address, password_hash ]
     );
     return result.rows[0];
 }
@@ -35,15 +35,15 @@ async function getCustomerByEmail(email) {
 
 // Update
 async function updateCustomer(id, customerData) {
-    const { name, email, phone, company, tax_id, billing_address, shipping_address, image_url, image } = customerData;
+    const { name, email, phone, company, business_id_number, corporate_tax_id, billing_address, shipping_address, image_url, image } = customerData;
     const normalizedImage = image_url ?? image ?? null;
     const result = await client.query(
         `UPDATE customers
-        SET name = $1, email = $2, phone = $3, company = $4, tax_id = $5, billing_address = $6, shipping_address = $7,
-            image_url = COALESCE($9, image_url)
-        WHERE customer_id = $8
+        SET name = $1, email = $2, phone = $3, company = $4, business_id_number = $5, corporate_tax_id = $6, billing_address = $7, shipping_address = $8,
+            image_url = COALESCE($10, image_url)
+        WHERE customer_id = $9
         RETURNING *`,
-        [name, email, phone, company, tax_id, billing_address, shipping_address, id, normalizedImage || null]
+        [name, email, phone, company, business_id_number, corporate_tax_id, billing_address, shipping_address, id, normalizedImage || null]
     );
     return result.rows[0]; 
 }

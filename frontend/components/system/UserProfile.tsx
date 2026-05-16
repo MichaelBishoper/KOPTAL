@@ -323,6 +323,9 @@ export function UserProfile({ user, userType, onLogout, loggingOut }: UserProfil
           {userType === "tenant" && (
             <TenantDetails tenant={user as TenantRow} isEditing={isEditing} get={get} onChange={handleChange} />
           )}
+          {userType === "admin" && (
+            <AdminDetails admin={user as AdminRow} isEditing={isEditing} get={get} onChange={handleChange} />
+          )}
         </div>
       </div>
     </div>
@@ -350,7 +353,16 @@ function CustomerDetails({
         ) : (
           <Field label="Company" value={customer.company || "Not provided"} />
         )}
-        <Field label="Tax ID" value={customer.tax_id || "Not provided"} />
+        {isEditing ? (
+          <EditField label="Business ID Number" name="business_id_number" value={get("business_id_number")} onChange={onChange} />
+        ) : (
+          <Field label="Business ID Number" value={customer.business_id_number || "Not provided"} />
+        )}
+        {isEditing ? (
+          <EditField label="Corporate Tax ID" name="corporate_tax_id" value={get("corporate_tax_id")} onChange={onChange} />
+        ) : (
+          <Field label="Corporate Tax ID" value={customer.corporate_tax_id || "Not provided"} />
+        )}
       </div>
 
       <h3 className="text-sm font-bold text-gray-700 uppercase mb-4 mt-6">Addresses</h3>
@@ -391,9 +403,46 @@ function TenantDetails({
       <div className="space-y-4">
         <div className="flex-1">
           {isEditing ? (
+            <EditField label="National ID Number" name="national_id_number" value={get("national_id_number")} onChange={onChange} />
+          ) : (
+            <Field label="National ID Number" value={tenant.national_id_number || "Not specified"} />
+          )}
+        </div>
+        <div className="flex-1">
+          {isEditing ? (
             <EditField label="Location" name="location" value={get("location")} onChange={onChange} />
           ) : (
             <Field label="Location" value={tenant.location || "Not specified"} />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* Admin Details */
+function AdminDetails({
+  admin,
+  isEditing,
+  get,
+  onChange,
+}: {
+  admin: AdminRow;
+  isEditing: boolean;
+  get: (key: string) => string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+}) {
+  return (
+    <div className="border-t pt-6">
+      <div className="mb-4">
+        <h3 className="text-sm font-bold text-gray-700 uppercase">Cooperative Information</h3>
+      </div>
+      <div className="space-y-4">
+        <div className="flex-1">
+          {isEditing ? (
+            <EditField label="Cooperative ID Number" name="cooperative_id_number" value={get("cooperative_id_number")} onChange={onChange} />
+          ) : (
+            <Field label="Cooperative ID Number" value={admin.cooperative_id_number || "Not specified"} />
           )}
         </div>
       </div>

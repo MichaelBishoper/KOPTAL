@@ -3,6 +3,7 @@ export type AdminRow = {
   name: string;
   email: string;
   phone: string;
+  cooperative_id_number: string;
   categories: string[];
   password_hash: string;
   created_at: string;
@@ -14,7 +15,8 @@ export type CustomerRow = {
   email: string;
   phone: string;
   company: string;
-  tax_id: string;
+  business_id_number: string;
+  corporate_tax_id: string;
   billing_address: string;
   shipping_address: string;
   password_hash: string;
@@ -27,6 +29,7 @@ export type TenantRow = {
   name: string;
   email: string;
   phone: string;
+  national_id_number: string;
   verified: boolean;
   location?: string;
   image?: string;

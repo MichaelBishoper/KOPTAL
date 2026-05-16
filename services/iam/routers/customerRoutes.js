@@ -29,10 +29,10 @@ router.put('/profile', verifyToken, async (req, res, next) => {
             throw new AppError('Access denied', 403);
         }
         
-        const { name, email, phone, company, tax_id, billing_address, shipping_address, image, image_url } = req.body;
+        const { name, email, phone, company, business_id_number, corporate_tax_id, billing_address, shipping_address, image, image_url } = req.body;
         
         const updated = await updateCustomer(req.user.user_id, {
-            name, email, phone, company, tax_id, billing_address, shipping_address,
+            name, email, phone, company, business_id_number, corporate_tax_id, billing_address, shipping_address,
             image_url: image_url ?? image ?? undefined,
         });
         

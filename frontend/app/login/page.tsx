@@ -20,12 +20,16 @@ type RegisterForm = {
   email: string;
   phone: string;
   password: string;
+  // admin fields
+  cooperative_id_number: string;
   // customer fields
   company: string;
-  tax_id: string;
+  business_id_number: string;
+  corporate_tax_id: string;
   billing_address: string;
   shipping_address: string;
   // tenant fields
+  national_id_number: string;
   location: string;
 };
 
@@ -47,10 +51,13 @@ export default function LoginPage() {
     email: "",
     phone: "",
     password: "",
+    cooperative_id_number: "",
     company: "",
-    tax_id: "",
+    business_id_number: "",
+    corporate_tax_id: "",
     billing_address: "",
     shipping_address: "",
+    national_id_number: "",
     location: "",
   });
 
@@ -117,20 +124,36 @@ export default function LoginPage() {
       password: registerForm.password,
     };
 
+    if (registerForm.user_type === "admin") {
+      if (!registerForm.cooperative_id_number.trim()) {
+        setError("Cooperative ID Number is required for admin registration.");
+        setLoading(false);
+        return;
+      }
+      payload.cooperative_id_number = registerForm.cooperative_id_number.trim();
+    }
+
     if (registerForm.user_type === "customer") {
       payload.company = registerForm.company;
-      payload.tax_id = registerForm.tax_id;
+      payload.business_id_number = registerForm.business_id_number;
+      payload.corporate_tax_id = registerForm.corporate_tax_id;
       payload.billing_address = registerForm.billing_address;
       payload.shipping_address = registerForm.shipping_address;
     }
 
     if (registerForm.user_type === "tenant") {
+      if (!registerForm.national_id_number.trim()) {
+        setError("National ID Number is required for tenant registration.");
+        setLoading(false);
+        return;
+      }
       if (!registerForm.location.trim()) {
         setError("Location is required for tenant registration.");
         setLoading(false);
         return;
       }
 
+      payload.national_id_number = registerForm.national_id_number.trim();
       payload.location = registerForm.location.trim();
     }
 
@@ -317,6 +340,16 @@ export default function LoginPage() {
               {registerForm.user_type === "tenant" ? (
                 <>
                   <label className="block">
+                    <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-600">National ID Number</span>
+                    <input
+                      type="text"
+                      required
+                      value={registerForm.national_id_number}
+                      onChange={(event) => handleRegisterChange("national_id_number", event.target.value)}
+                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:border-teal-500 focus:outline-none"
+                    />
+                  </label>
+                  <label className="block">
                     <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-600">Location</span>
                     <input
                       type="text"
@@ -346,12 +379,23 @@ export default function LoginPage() {
                   </label>
 
                   <label className="block">
-                    <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-600">Tax ID</span>
+                    <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-600">Business ID Number</span>
                     <input
                       type="text"
                       required
-                      value={registerForm.tax_id}
-                      onChange={(event) => handleRegisterChange("tax_id", event.target.value)}
+                      value={registerForm.business_id_number}
+                      onChange={(event) => handleRegisterChange("business_id_number", event.target.value)}
+                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:border-teal-500 focus:outline-none"
+                    />
+                  </label>
+
+                  <label className="block">
+                    <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-600">Corporate Tax ID</span>
+                    <input
+                      type="text"
+                      required
+                      value={registerForm.corporate_tax_id}
+                      onChange={(event) => handleRegisterChange("corporate_tax_id", event.target.value)}
                       className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:border-teal-500 focus:outline-none"
                     />
                   </label>
@@ -374,6 +418,21 @@ export default function LoginPage() {
                       required
                       value={registerForm.shipping_address}
                       onChange={(event) => handleRegisterChange("shipping_address", event.target.value)}
+                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:border-teal-500 focus:outline-none"
+                    />
+                  </label>
+                </>
+              ) : null}
+
+              {registerForm.user_type === "admin" ? (
+                <>
+                  <label className="block">
+                    <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-600">Cooperative ID Number</span>
+                    <input
+                      type="text"
+                      required
+                      value={registerForm.cooperative_id_number}
+                      onChange={(event) => handleRegisterChange("cooperative_id_number", event.target.value)}
                       className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:border-teal-500 focus:outline-none"
                     />
                   </label>

@@ -22,6 +22,7 @@ router.get('/profile', verifyToken, async (req, res, next) => {
             email: tenant.email,
             phone: tenant.phone,
             verified: tenant.verified,
+            national_id_number: tenant.national_id_number,
             location: tenant.location,
             image: tenant.image_url,
             password_hash: tenant.password_hash,
@@ -47,6 +48,7 @@ router.put('/profile', verifyToken, async (req, res, next) => {
             name: req.body.name ?? tenant.name,
             email: req.body.email ?? tenant.email,
             phone: req.body.phone ?? tenant.phone,
+            national_id_number: req.body.national_id_number ?? tenant.national_id_number,
             location: req.body.location ?? tenant.location,
             image_url: req.body.image ?? req.body.image_url ?? tenant.image_url,
         };
@@ -58,6 +60,7 @@ router.put('/profile', verifyToken, async (req, res, next) => {
             name: updatedTenant.name,
             email: updatedTenant.email,
             phone: updatedTenant.phone,
+            national_id_number: updatedTenant.national_id_number,
             verified: updatedTenant.verified,
             location: updatedTenant.location,
             image: updatedTenant.image_url,
@@ -101,12 +104,13 @@ router.put('/:id', verifyToken, async (req, res, next) => {
             throw new AppError('Tenant not found', 404);
         }
         
-        const { name, email, phone, location, image_url, image } = req.body;
+        const { name, email, phone, national_id_number, location, image_url, image } = req.body;
         
         const updatedTenant = await updateTenant(id, {
             name,
             email,
             phone,
+            national_id_number,
             location,
             image_url: image_url ?? image,
         });
@@ -118,6 +122,7 @@ router.put('/:id', verifyToken, async (req, res, next) => {
                 name: updatedTenant.name,
                 email: updatedTenant.email,
                 phone: updatedTenant.phone,
+                national_id_number: updatedTenant.national_id_number,
                 verified: updatedTenant.verified,
                 location: updatedTenant.location,
                 image: updatedTenant.image_url,

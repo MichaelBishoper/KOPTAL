@@ -1,5 +1,20 @@
 # Changes
 ## Admins Table
+<<<<<<< Updated upstream
+=======
+Old:
+```sql
+create table admins (
+	manager_id serial primary key,
+	name varchar(100) unique not null,
+	email varchar(255) unique not null,
+	phone varchar(255) unique not null,
+	cooperative_id_number varchar(255) unique not null,
+	password_hash VARCHAR(255) not null,
+	created_at TIMESTAMP default current_timestamp
+);
+```
+>>>>>>> Stashed changes
 
 ```sql
 CREATE TABLE admins (
@@ -7,11 +22,31 @@ CREATE TABLE admins (
     name VARCHAR(100) UNIQUE NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
     phone VARCHAR(255) UNIQUE NOT NULL,
+    cooperative_id_number VARCHAR(255) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
+    image_url VARCHAR(500), -- NEW
     categories TEXT[],  -- NEW
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 ```
+<<<<<<< Updated upstream
+=======
+## Tenants Table
+Old:
+```sql
+create table tenants (
+	tenant_id serial primary key,
+	name varchar(100) unique not null,
+	email varchar(255) unique not null,
+	phone varchar(255) unique not null,
+	national_id_number varchar(255) unique not null,
+	verified boolean default false,
+	image_url VARCHAR(500), -- NEW
+	password_hash VARCHAR(255) not null,
+	created_at TIMESTAMP default current_timestamp
+);
+```
+>>>>>>> Stashed changes
 
 ## Tenants Table
 ```sql
@@ -20,6 +55,7 @@ CREATE TABLE tenants (
     name VARCHAR(100) UNIQUE NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
     phone VARCHAR(255) UNIQUE NOT NULL,
+    national_id_number VARCHAR(255) UNIQUE NOT NULL,
     verified BOOLEAN DEFAULT FALSE,
     password_hash VARCHAR(255) NOT NULL,
     location VARCHAR(255), -- NEW
@@ -49,6 +85,7 @@ CREATE TABLE tenants (
     name VARCHAR(100) UNIQUE NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
     phone VARCHAR(255) UNIQUE NOT NULL,
+    national_id_number VARCHAR(255) UNIQUE NOT NULL,
     verified BOOLEAN DEFAULT FALSE,
     password_hash VARCHAR(255) NOT NULL,
     location VARCHAR(255), -- NEW
@@ -74,7 +111,8 @@ create table customers (
 	email varchar(255) unique not null,
 	phone varchar(255) unique not null,
 	company varchar(255) not null,
-	tax_id varchar(255) not null,
+	business_id_number varchar(255) unique not null,
+	corporate_tax_id varchar(255) not null,
 	billing_address text not null,
 	shipping_address text not null,
 	password_hash VARCHAR(255) not null,

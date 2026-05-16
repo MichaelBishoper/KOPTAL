@@ -2,11 +2,11 @@ const client = require('../db')
 
 // Create
 async function createTenant(tenantData) {
-    const { name, email, phone, password_hash, location, image_url } = tenantData;
+    const { name, email, phone, national_id_number, password_hash, location, image_url } = tenantData;
     const result = await client.query(
-        `INSERT INTO tenants (name, email, phone, password_hash, location, image_url)
-        VALUES ($1, $2, $3, $4, $5, $6)
-        RETURNING *`, [name, email, phone, password_hash, location ?? null, image_url ?? null]
+        `INSERT INTO tenants (name, email, phone, national_id_number, password_hash, location, image_url)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        RETURNING *`, [name, email, phone, national_id_number, password_hash, location ?? null, image_url ?? null]
     );
     return result.rows[0];
 }
@@ -35,12 +35,12 @@ async function getTenantByEmail(email) {
 
 // Update
 async function updateTenant(id, tenantData) {
-    const { name, email, phone, location, image_url } = tenantData;
+    const { name, email, phone, national_id_number, location, image_url } = tenantData;
     const result = await client.query(
         `UPDATE tenants
-        SET name = $1, email = $2, phone = $3, location = $4, image_url = $5
-        WHERE tenant_id = $6
-        RETURNING *`, [name, email, phone, location ?? null, image_url ?? null, id]
+        SET name = $1, email = $2, phone = $3, national_id_number = $4, location = $5, image_url = $6
+        WHERE tenant_id = $7
+        RETURNING *`, [name, email, phone, national_id_number, location ?? null, image_url ?? null, id]
     );
     return result.rows[0]; 
 }

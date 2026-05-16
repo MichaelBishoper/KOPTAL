@@ -12,6 +12,7 @@ CREATE TABLE tenants (
     name VARCHAR(100) UNIQUE NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
     phone VARCHAR(255) UNIQUE NOT NULL,
+    national_id_number VARCHAR(255) UNIQUE NOT NULL,
     verified BOOLEAN DEFAULT FALSE,
     password_hash VARCHAR(255) NOT NULL,
     location VARCHAR(255),
@@ -26,7 +27,8 @@ CREATE TABLE customers (
     email VARCHAR(255) UNIQUE NOT NULL,
     phone VARCHAR(255) UNIQUE NOT NULL,
     company VARCHAR(255) NOT NULL,
-    tax_id VARCHAR(255) NOT NULL,
+    business_id_number VARCHAR(255) UNIQUE NOT NULL,
+    corporate_tax_id VARCHAR(255) NOT NULL,
     billing_address TEXT NOT NULL,
     shipping_address TEXT NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
@@ -40,6 +42,7 @@ CREATE TABLE admins (
     name VARCHAR(100) UNIQUE NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
     phone VARCHAR(255) UNIQUE NOT NULL,
+    cooperative_id_number VARCHAR(255) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
     image_url VARCHAR(500),
     categories TEXT[],
@@ -103,16 +106,16 @@ INSERT INTO units (unit_name, unit_symbol, unit_type) VALUES
 ('pieces', 'pc', 'count');
 
 -- Insert Tenants
-INSERT INTO tenants (name, email, phone, verified, password_hash, location, image_url) VALUES
-('Rafael Fresh Foods', 'rafael@marketplace.com', '555-0101', true, '$2b$10$xk7zXKxQYKKbRk9xYqZ9Oe', '123 Harvest Road, Jakarta', 'https://images.example.com/rafael.jpg');
+INSERT INTO tenants (name, email, phone, national_id_number, verified, password_hash, location, image_url) VALUES
+('Rafael Fresh Foods', 'rafael@marketplace.com', '555-0101', '3171234567890001', true, '$2b$10$xk7zXKxQYKKbRk9xYqZ9Oe', '123 Harvest Road, Jakarta', 'https://images.example.com/rafael.jpg');
 
 -- Insert Customers
-INSERT INTO customers (name, email, phone, company, tax_id, billing_address, shipping_address, password_hash) VALUES
-('James Carter', 'james@kraftykitchen.com', '555-0201', 'Krafty Kitchen Inc', 'TX-12345678', '100 Corporate Dr, Chicago, IL 60601', '100 Corporate Dr, Chicago, IL 60601', '$2b$10$xk7zXKxQYKKbRk9xYqZ9Oe');
+INSERT INTO customers (name, email, phone, company, business_id_number, corporate_tax_id, billing_address, shipping_address, password_hash) VALUES
+('James Carter', 'james@kraftykitchen.com', '555-0201', 'Krafty Kitchen Inc', '1234567890123', '01.234.567.8-901.234', '100 Corporate Dr, Chicago, IL 60601', '100 Corporate Dr, Chicago, IL 60601', '$2b$10$xk7zXKxQYKKbRk9xYqZ9Oe');
 
 -- Insert Admins
-INSERT INTO admins (name, email, phone, password_hash, categories) VALUES
-('Alice Manager', 'alice@marketplace.com', '555-0301', '$2b$10$xk7zXKxQYKKbRk9xYqZ9Oe', ARRAY['Vegetables', 'Fruits', 'Spices']);
+INSERT INTO admins (name, email, phone, cooperative_id_number, password_hash, categories) VALUES
+('Alice Manager', 'alice@marketplace.com', '555-0301', '1234.5678.90', '$2b$10$xk7zXKxQYKKbRk9xYqZ9Oe', ARRAY['Vegetables', 'Fruits', 'Spices']);
 
 -- Insert Tenant Products
 INSERT INTO tenant_products (tenant_id, name, quantity, unit_id, price, category, image_url, description) VALUES
