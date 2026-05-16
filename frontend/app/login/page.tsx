@@ -63,7 +63,8 @@ export default function LoginPage() {
 
   const redirectAfterLogin = (appRole: AppRole) => {
     const fallbackPath = ROLE_DESTINATION[appRole];
-    router.push(canUseNext ? nextPath : fallbackPath);
+    const shouldUseNext = checkoutRequired && canUseNext;
+    router.push(shouldUseNext ? nextPath : fallbackPath);
     router.refresh();
   };
 

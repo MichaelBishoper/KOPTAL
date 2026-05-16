@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { formatCurrency, getUnitLabel, getUnitStep, saveBasketItemDraft, shouldUseNativeImage, safeImageSrc } from "@/lib";
 
 import type { TenantProductRow } from "@/structure/db";
@@ -26,6 +27,7 @@ export default function ProductCartBox({ product }: ProductCartBoxProps) {
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved">("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const subtotal = Math.round(product.price * quantity);
+  const quantityInputWidth = `${Math.max(4, String(quantity).length + 2)}ch`;
 
   const maxQuantity = useMemo(() => {
     if (availableStock <= 0) return minQuantity;
@@ -89,7 +91,7 @@ export default function ProductCartBox({ product }: ProductCartBoxProps) {
       </div>
 
       <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2 border border-gray-300 rounded-lg px-2 py-1">
+        <div className="flex items-center gap-3 border border-gray-300 rounded-lg px-3 py-1">
           <button
             onClick={() => setQuantity(normalizeQuantityInput(quantity - quantityStep))}
             className="text-gray-600 hover:text-gray-800 font-semibold"
@@ -103,7 +105,8 @@ export default function ProductCartBox({ product }: ProductCartBoxProps) {
             max={maxQuantity}
             step={quantityStep}
             onChange={(e) => setQuantity(normalizeQuantityInput(parseInt(e.target.value, 10) || minQuantity))}
-            className="w-8 text-center font-semibold border-none outline-none text-sm"
+            style={{ width: quantityInputWidth }}
+            className="text-center font-semibold border-none outline-none text-sm bg-transparent px-1 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
           />
           <button
             onClick={() => setQuantity(normalizeQuantityInput(quantity + quantityStep))}
@@ -138,9 +141,14 @@ export default function ProductCartBox({ product }: ProductCartBoxProps) {
                 ? "Saving..."
                 : "+ Basket"}
         </button>
-        {saveState === "saved" && (
-          <p className="text-xs font-medium text-emerald-700 text-center">Saved locally. Backend can replace this with POST later.</p>
-        )}
+          {saveState === "saved" && (
+            <Link
+              href="/customer/basket"
+              className="w-full rounded-lg border border-teal-200 bg-teal-50 px-4 py-2 text-center text-sm font-semibold text-teal-700 hover:bg-teal-100 transition-colors"
+            >
+              Go to Basket
+            </Link>
+          )}
         {errorMessage && <p className="text-xs font-medium text-rose-700 text-center">{errorMessage}</p>}
       </div>
     </div>

@@ -2,7 +2,7 @@ import type { AdminRow } from "@/structure/db";
 import { fetchAdminSettingsFromAPI, updateAdminSettingsOnAPI } from "@/fetch/admins";
 
 const DEFAULT_TAX_RATE = 11;
-const DEFAULT_CATEGORIES = ["Vegetables", "Fruits", "Spices", "Rice"];
+const DEFAULT_CATEGORIES = ["Vegetables", "Fruits", "Spices"];
 
 let cachedCategories: string[] = [...DEFAULT_CATEGORIES];
 let cachedTaxRate = DEFAULT_TAX_RATE;

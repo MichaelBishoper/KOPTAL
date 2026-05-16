@@ -37,7 +37,7 @@ export default function Navbar() {
 
     if (effectiveRole === "tennant") {
       return [
-        { label: "T Dashboard", href: "/tennant/t_dashboard" },
+        { label: "Dashboard", href: "/tennant/t_dashboard" },
         { label: "Add Product", href: "/tennant/product_add" },
         { label: "Transaction & Orders", href: "/tennant/t_transaction" },
       ];
