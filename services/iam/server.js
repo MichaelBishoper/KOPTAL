@@ -23,18 +23,7 @@ const swaggerOptions = {
             title: 'IAM Service', 
             version: '1.0.0',
             description: 'Identity Access Management Server for KOPTAL',
-        },
-        servers: [
-            {
-                url: `http://localhost:${process.env.PORT || 3001}`,
-                description: 'IAM Service',
-            },
-            {
-                url: `http://localhost:${process.env.PORT || 3002}`,
-                description: 'File Upload Service',
-            },
-            
-        ],
+        }, 
         components: {
             securitySchemes: {
                 bearerAuth: {
