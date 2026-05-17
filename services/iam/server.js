@@ -26,13 +26,14 @@ const swaggerOptions = {
         },
         servers: [
             {
-                url: `http://localhost:${process.env.PORT || 3002}`,
-                description: 'File Upload Service',
-            },
-            {
                 url: `http://localhost:${process.env.PORT || 3001}`,
                 description: 'IAM Service',
             },
+            {
+                url: `http://localhost:${process.env.PORT || 3002}`,
+                description: 'File Upload Service',
+            },
+            
         ],
         components: {
             securitySchemes: {

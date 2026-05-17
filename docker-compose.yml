@@ -50,6 +50,9 @@ services:
       - PG_PASSWORD=password123
       - PG_DATABASE=koptal
       - JWT_SECRET=some_test_secret
+    volumes:
+      - ./services/monolith:/app
+      - /app/node_modules
     depends_on:
       - db
     restart: unless-stopped
@@ -70,6 +73,8 @@ services:
       - DB_PORT=5432
       - BASE_URL=http://localhost:3002
     volumes:
+      - ./services/fileUpload:/app      
+      - /app/node_modules               
       - ./uploads:/app/src/uploads/
     depends_on:
       - db
