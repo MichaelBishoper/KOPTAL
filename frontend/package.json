@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "mocha --loader tsx test/**/*.test.ts"
+    "test": "mocha --require tsx test/**/*.test.ts"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
@@ -26,7 +26,7 @@
     "eslint-config-next": "16.2.6",
     "mocha": "^11.7.5",
     "tailwindcss": "^4",
-    "tsx": "^4.19.2",
+    "tsx": "^4.22.1",
     "typescript": "^5"
   }
 }
