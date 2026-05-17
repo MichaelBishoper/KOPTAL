@@ -17,7 +17,7 @@ COPY . .
 RUN mkdir -p /app/src/uploads
 
 # expose port
-EXPOSE 3000
+EXPOSE 3002
 
 # run the app
-CMD ["npm", "run", "dev"]
+CMD ["node", "index.js"]
