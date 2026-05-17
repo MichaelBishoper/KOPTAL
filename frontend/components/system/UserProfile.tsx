@@ -209,13 +209,13 @@ export function UserProfile({ user, userType, onLogout, loggingOut }: UserProfil
             {useNativePreviewImage ? (
               <img
                 src={profileImageSrc}
-                alt={user.name}
+                alt={(user as any).name || (user as any).username || "User"}
                 className="h-full w-full object-cover rounded-full border-4 border-[#01A49E]"
               />
             ) : (
               <Image
                 src={profileImageSrc}
-                alt={user.name}
+                alt={(user as any).name || (user as any).username || "User"}
                 fill
                 className="object-cover rounded-full border-4 border-[#01A49E]"
               />
@@ -232,7 +232,7 @@ export function UserProfile({ user, userType, onLogout, loggingOut }: UserProfil
               />
             </label>
           )}
-          <h2 className="text-xl font-bold text-gray-800 text-center">{get("name")}</h2>
+          <h2 className="text-xl font-bold text-gray-800 text-center">{get("name") || get("username")}</h2>
           <p className="text-sm text-gray-500 capitalize mt-1">
             {userType === "admin" ? "Manager" : userType}
           </p>
@@ -260,12 +260,14 @@ export function UserProfile({ user, userType, onLogout, loggingOut }: UserProfil
               </>
             ) : (
               <>
-                <button
-                  onClick={handleEdit}
-                  className="rounded-lg border border-teal-600 px-4 py-2 text-sm font-semibold text-teal-600 hover:bg-teal-50 transition-colors"
-                >
-                  Edit Profile
-                </button>
+                {userType !== "admin" && (
+                  <button
+                    onClick={handleEdit}
+                    className="rounded-lg border border-teal-600 px-4 py-2 text-sm font-semibold text-teal-600 hover:bg-teal-50 transition-colors"
+                  >
+                    Edit Profile
+                  </button>
+                )}
                           <ChangePasswordButton />
                 {onLogout ? (
                   <button
@@ -290,22 +292,28 @@ export function UserProfile({ user, userType, onLogout, loggingOut }: UserProfil
           <div className="grid grid-cols-2 gap-6">
             <Field label="Join Date" value={joinMonth && joinYear ? `${joinMonth} ${joinYear}` : "—"} />
 
-            {isEditing ? (
-              <EditField label="Email" name="email" value={get("email")} onChange={handleChange} />
+            {userType === "admin" ? (
+              <Field label="Username" value={get("username")} />
             ) : (
-              <Field label="Email" value={get("email")} />
-            )}
+              <>
+                {isEditing ? (
+                  <EditField label="Email" name="email" value={get("email")} onChange={handleChange} />
+                ) : (
+                  <Field label="Email" value={get("email")} />
+                )}
 
-            {isEditing ? (
-              <EditField label="Name" name="name" value={get("name")} onChange={handleChange} />
-            ) : (
-              <Field label="Name" value={get("name")} />
-            )}
+                {isEditing ? (
+                  <EditField label="Name" name="name" value={get("name")} onChange={handleChange} />
+                ) : (
+                  <Field label="Name" value={get("name")} />
+                )}
 
-            {isEditing ? (
-              <EditField label="Phone" name="phone" value={get("phone")} onChange={handleChange} />
-            ) : (
-              <Field label="Phone" value={get("phone")} />
+                {isEditing ? (
+                  <EditField label="Phone" name="phone" value={get("phone")} onChange={handleChange} />
+                ) : (
+                  <Field label="Phone" value={get("phone")} />
+                )}
+              </>
             )}
 
             <div>
@@ -350,7 +358,16 @@ function CustomerDetails({
         ) : (
           <Field label="Company" value={customer.company || "Not provided"} />
         )}
-        <Field label="Tax ID" value={customer.tax_id || "Not provided"} />
+        {isEditing ? (
+          <EditField label="Business ID Number" name="business_id_number" value={get("business_id_number")} onChange={onChange} />
+        ) : (
+          <Field label="Business ID Number" value={customer.business_id_number || "Not provided"} />
+        )}
+        {isEditing ? (
+          <EditField label="Corporate Tax ID" name="corporate_tax_id" value={get("corporate_tax_id")} onChange={onChange} />
+        ) : (
+          <Field label="Corporate Tax ID" value={customer.corporate_tax_id || "Not provided"} />
+        )}
       </div>
 
       <h3 className="text-sm font-bold text-gray-700 uppercase mb-4 mt-6">Addresses</h3>

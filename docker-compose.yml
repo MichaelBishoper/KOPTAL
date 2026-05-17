@@ -1,18 +1,46 @@
 version: '3.8'
 
 services:
-  db:
+  db_iam:
     image: postgres:15-alpine
-    container_name: koptal_postgres
+    container_name: koptal_db_iam
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password123
-      POSTGRES_DB: koptal
+      POSTGRES_DB: koptal_iam
     ports:
       - "5433:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./infrastructure/docker/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - pg_data_iam:/var/lib/postgresql/data
+      - ./infrastructure/docker/init_iam.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: unless-stopped
+
+  db_monolith:
+    image: postgres:15-alpine
+    container_name: koptal_db_monolith
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password123
+      POSTGRES_DB: koptal_monolith
+    ports:
+      - "5434:5432"
+    volumes:
+      - pg_data_monolith:/var/lib/postgresql/data
+      - ./infrastructure/docker/init_monolith.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: unless-stopped
+
+  db_files:
+    image: postgres:15-alpine
+    container_name: koptal_db_files
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password123
+      POSTGRES_DB: koptal_files
+    ports:
+      - "5435:5432"
+    volumes:
+      - pg_data_files:/var/lib/postgresql/data
+      - ./infrastructure/docker/init_files.sql:/docker-entrypoint-initdb.d/init.sql
     restart: unless-stopped
 
   iam:
@@ -26,14 +54,14 @@ services:
       - /app/node_modules     
     environment:
       - PORT=3001
-      - PG_HOST=db
+      - PG_HOST=db_iam
       - PG_PORT=5432
       - PG_USER=postgres
       - PG_PASSWORD=password123
-      - PG_DATABASE=koptal
+      - PG_DATABASE=koptal_iam
       - JWT_SECRET=some_test_secret
     depends_on:
-      - db
+      - db_iam
     restart: unless-stopped
 
   monolith:
@@ -44,17 +72,17 @@ services:
       - "4000:4000"
     environment:
       - PORT=4000
-      - PG_HOST=db
+      - PG_HOST=db_monolith
       - PG_PORT=5432
       - PG_USER=postgres
       - PG_PASSWORD=password123
-      - PG_DATABASE=koptal
+      - PG_DATABASE=koptal_monolith
       - JWT_SECRET=some_test_secret
     volumes:
       - ./services/monolith:/app
       - /app/node_modules
     depends_on:
-      - db
+      - db_monolith
     restart: unless-stopped
 
   fileupload:
@@ -66,8 +94,8 @@ services:
     environment:
       - PORT=3000
       - UPLOAD_DIR=/app/src/uploads/
-      - DB_HOST=db
-      - DB_NAME=koptal
+      - DB_HOST=db_files
+      - DB_NAME=koptal_files
       - DB_USER=postgres
       - DB_PASSWORD=password123
       - DB_PORT=5432
@@ -77,8 +105,10 @@ services:
       - /app/node_modules               
       - ./uploads:/app/src/uploads/
     depends_on:
-      - db
+      - db_files
     restart: unless-stopped
 
 volumes:
-  postgres_data:
+  pg_data_iam:
+  pg_data_monolith:
+  pg_data_files:

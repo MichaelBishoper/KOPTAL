@@ -18,7 +18,7 @@ async function getProductById(id) {
      FROM tenant_products p
      LEFT JOIN units u ON p.unit_id = u.unit_id
      WHERE p.product_id = $1`,
-    [id]
+     [id]
   );
   return res.rows[0];
 }
@@ -57,10 +57,34 @@ async function deleteProduct(id) {
   await pool.query('DELETE FROM tenant_products WHERE product_id = $1', [id]);
 }
 
+async function decrementStock(id, qty) {
+  const res = await pool.query(
+    `UPDATE tenant_products
+     SET quantity = quantity - $1
+     WHERE product_id = $2 AND quantity >= $1
+     RETURNING *`,
+     [qty, id]
+  );
+  return res.rows[0];
+}
+
+async function incrementStock(id, qty) {
+  const res = await pool.query(
+    `UPDATE tenant_products
+     SET quantity = quantity + $1
+     WHERE product_id = $2
+     RETURNING *`,
+     [qty, id]
+  );
+  return res.rows[0];
+}
+
 module.exports = {
   getAllProducts,
   getProductById,
   createProduct,
   updateProduct,
   deleteProduct,
+  decrementStock,
+  incrementStock,
 };

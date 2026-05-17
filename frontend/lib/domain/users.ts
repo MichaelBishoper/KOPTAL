@@ -27,7 +27,8 @@ function buildProfileSavePayload(user: EditableUserRow, draft: Record<string, st
       email: draft.email ?? user.email ?? "",
       phone: draft.phone ?? user.phone ?? "",
       company: draft.company ?? user.company ?? "",
-      tax_id: draft.tax_id ?? user.tax_id ?? "",
+      business_id_number: draft.business_id_number ?? user.business_id_number ?? "",
+      corporate_tax_id: draft.corporate_tax_id ?? user.corporate_tax_id ?? "",
       billing_address: draft.billing_address ?? user.billing_address ?? "",
       shipping_address: draft.shipping_address ?? user.shipping_address ?? "",
       ...(draft.image ? { image: draft.image } : {}),
@@ -35,10 +36,7 @@ function buildProfileSavePayload(user: EditableUserRow, draft: Record<string, st
   }
 
   return {
-    name: draft.name ?? user.name ?? "",
-    email: draft.email ?? user.email ?? "",
-    phone: draft.phone ?? user.phone ?? "",
-    ...(draft.image ? { image: draft.image } : {}),
+    username: (user as AdminRow).username ?? "",
   };
 }
 

@@ -16,16 +16,15 @@ async function readDistinctCategoriesFromProducts() {
   }
 }
 
-async function readCategoriesFromAdmins() {
+async function readCategoriesFromSettings() {
   try {
     const res = await pool.query(
-      'SELECT categories FROM admins WHERE categories IS NOT NULL'
+      'SELECT categories FROM admin_settings WHERE id = 1'
     );
-    const all = [];
-    for (const row of res.rows) {
-      if (Array.isArray(row.categories)) all.push(...row.categories);
+    if (res.rows.length > 0 && Array.isArray(res.rows[0].categories)) {
+      return res.rows[0].categories;
     }
-    return [...new Set(all.filter((c) => typeof c === 'string' && c.trim()))];
+    return [];
   } catch {
     return [];
   }
@@ -33,14 +32,18 @@ async function readCategoriesFromAdmins() {
 
 async function getAdminSettings(req, res, next) {
   try {
-    const [productCategories, adminCategories] = await Promise.all([
-      readDistinctCategoriesFromProducts(),
-      readCategoriesFromAdmins(),
-    ]);
+    const dbRes = await pool.query('SELECT categories, tax_rate FROM admin_settings WHERE id = 1');
+    let dbCategories = [];
+    let dbTaxRate = 11.00;
+    if (dbRes.rows.length > 0) {
+      dbCategories = dbRes.rows[0].categories || [];
+      dbTaxRate = Number(dbRes.rows[0].tax_rate);
+    }
 
-    // admin-defined categories first, then fill in any from existing products
-    const merged = [...new Set([...adminCategories, ...productCategories])];
-    settingsStore.updateSettings({ categories: merged });
+    const productCategories = await readDistinctCategoriesFromProducts();
+    const merged = [...new Set([...dbCategories, ...productCategories])];
+    
+    settingsStore.updateSettings({ categories: merged, tax_rate: dbTaxRate });
 
     const settings = settingsStore.getSettings();
     res.json({ success: true, data: settings });
@@ -58,15 +61,18 @@ async function updateAdminSettings(req, res, next) {
     const patch = {};
     if (Array.isArray(req.body.categories)) {
       patch.categories = req.body.categories;
-      // persist to the logged-in admin's categories column in DB
       await pool.query(
-        'UPDATE admins SET categories = $1 WHERE manager_id = $2',
-        [req.body.categories, req.user.user_id]
+        'UPDATE admin_settings SET categories = $1 WHERE id = 1',
+        [req.body.categories]
       );
     }
 
     if (typeof req.body.tax_rate === 'number' && Number.isFinite(req.body.tax_rate)) {
       patch.tax_rate = req.body.tax_rate;
+      await pool.query(
+        'UPDATE admin_settings SET tax_rate = $1 WHERE id = 1',
+        [req.body.tax_rate]
+      );
     }
 
     const settings = settingsStore.updateSettings(patch);
