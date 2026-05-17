@@ -11,7 +11,8 @@ export type CustomerRow = {
   email: string;
   phone: string;
   company: string;
-  tax_id: string;
+  business_id_number: string;
+  corporate_tax_id: string;
   billing_address: string;
   shipping_address: string;
   password_hash: string;

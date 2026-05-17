@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const MONOLITH_URL = process.env.MONOLITH_URL ?? process.env.NEXT_PUBLIC_MONOLITH_URL ?? "http://localhost:4000";
+const INVENTORY_URL = process.env.INVENTORY_URL ?? "http://127.0.0.1:4001";
+const ORDER_URL = process.env.ORDER_URL ?? "http://127.0.0.1:4002";
+const ADMINCONF_URL = process.env.ADMINCONF_URL ?? "http://127.0.0.1:4003";
 
 type RouteContext = {
   params: Promise<{ path: string[] }>;
@@ -9,7 +11,21 @@ type RouteContext = {
 async function proxy(request: NextRequest, context: RouteContext): Promise<NextResponse> {
   const { path } = await context.params;
   const upstreamPath = Array.isArray(path) ? path.join("/") : "";
-  const targetUrl = `${MONOLITH_URL}/api/${upstreamPath}${request.nextUrl.search}`;
+
+  // Dynamic Routing based on path prefix
+  let targetBaseUrl = "";
+  if (upstreamPath.startsWith("units") || upstreamPath.startsWith("products")) {
+    targetBaseUrl = INVENTORY_URL;
+  } else if (upstreamPath.startsWith("purchaseOrders") || upstreamPath.startsWith("lineItems")) {
+    targetBaseUrl = ORDER_URL;
+  } else if (upstreamPath.startsWith("admin")) {
+    targetBaseUrl = ADMINCONF_URL;
+  } else {
+    // If no specific service matches, we return a 404 since the monolith is gone
+    return NextResponse.json({ error: `Path /api/monolith/${upstreamPath} not mapped to any microservice` }, { status: 404 });
+  }
+
+  const targetUrl = `${targetBaseUrl}/api/${upstreamPath}${request.nextUrl.search}`;
 
   const headers = new Headers();
   const contentType = request.headers.get("content-type");
@@ -44,8 +60,9 @@ async function proxy(request: NextRequest, context: RouteContext): Promise<NextR
       status: upstream.status,
       headers: responseHeaders,
     });
-  } catch {
-    return NextResponse.json({ error: "Monolith service unavailable" }, { status: 503 });
+  } catch (error: any) {
+    console.error(`Proxy to ${targetUrl} failed:`, error.message);
+    return NextResponse.json({ error: "Service unavailable" }, { status: 503 });
   }
 }
 

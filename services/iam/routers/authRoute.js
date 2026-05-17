@@ -122,7 +122,9 @@
      *                 type: string
      *               company:
      *                 type: string
-     *               tax_id:
+     *               business_id_number:
+     *                 type: string
+     *               corporate_tax_id:
      *                 type: string
      *               billing_address:
      *                 type: string

@@ -240,8 +240,10 @@ app.get('/files/:file_id', async (req, res) => {
   }
 });
 
-app.listen(3000, () => {
-  console.log('fileUpload service running on port 3000');
-});
+if (require.main === module) {
+  app.listen(3000, () => {
+    console.log('fileUpload service running on port 3000');
+  });
+}
 
 module.exports = app;

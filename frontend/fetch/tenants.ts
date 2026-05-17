@@ -28,6 +28,7 @@ function toTenantRow(raw: PublicTenant, index: number): TenantRow {
       : typeof raw.image_url === "string"
         ? raw.image_url
         : undefined,
+    cooperative_id_number: String((raw as any).cooperative_id_number ?? ""),
     password_hash: "",
     created_at: createdAt,
   };

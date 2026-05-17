@@ -7,7 +7,7 @@ type ApiEnvelope<T> = {
 
 const MONOLITH_BASE =
   typeof window === "undefined"
-    ? `${process.env.MONOLITH_URL ?? process.env.NEXT_PUBLIC_MONOLITH_URL ?? "http://localhost:4000"}/api`
+    ? `${process.env.INVENTORY_URL ?? process.env.MONOLITH_URL ?? "http://127.0.0.1:4001"}/api`
     : "/api/monolith";
 
 function toProductRow(raw: unknown): TenantProductRow | null {
