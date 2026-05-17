@@ -129,6 +129,13 @@ export default function LoginPage() {
       return;
     }
 
+    const phoneRegex = /^(\+62|62|0)8[1-9][0-9]{6,10}$/;
+    if (!phoneRegex.test(registerForm.phone)) {
+      setError("Please enter a valid Indonesian phone number (e.g., 08123456789 or +628123456789).");
+      setLoading(false);
+      return;
+    }
+
     const payload: Record<string, string> = {
       user_type: registerForm.user_type,
       name: registerForm.name,
@@ -139,7 +146,7 @@ export default function LoginPage() {
 
     if (registerForm.user_type === "admin") {
       if (!registerForm.cooperative_id_number.trim() || registerForm.cooperative_id_number.trim().length < 5) {
-        setError("Cooperative ID Number must be at least 5 characters long.");
+        setError("Cooperative ID Number (Nomor Induk Koperasi) must be at least 5 characters long.");
         setLoading(false);
         return;
       }
@@ -147,8 +154,8 @@ export default function LoginPage() {
     }
 
     if (registerForm.user_type === "customer") {
-      if (!/^\d{13}$/.test(registerForm.business_id_number)) {
-        setError("Business ID Number (NIB) must be exactly 13 digits.");
+      if (!registerForm.business_id_number.trim() || registerForm.business_id_number.trim().length < 13) {
+        setError("Business ID Number (Nomor Induk Berusaha) must be at least 13 digits.");
         setLoading(false);
         return;
       }
@@ -166,8 +173,8 @@ export default function LoginPage() {
     }
 
     if (registerForm.user_type === "tenant") {
-      if (!/^\d{16}$/.test(registerForm.national_id_number)) {
-        setError("National ID Number (NIK) must be exactly 16 digits.");
+      if (!registerForm.national_id_number.trim() || registerForm.national_id_number.trim().length < 16) {
+        setError("National ID Number (Nomor Induk Kependudukan) must be at least 16 digits.");
         setLoading(false);
         return;
       }
@@ -364,13 +371,13 @@ export default function LoginPage() {
               {registerForm.user_type === "tenant" ? (
                 <>
                   <label className="block">
-                    <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-600">National ID Number (NIK)</span>
+                    <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-600">National ID Number (Nomor Induk Kependudukan)</span>
                     <input
                       type="text"
                       required
                       value={registerForm.national_id_number}
                       onChange={(event) => handleRegisterChange("national_id_number", event.target.value)}
-                      placeholder="16-digit NIK"
+                      placeholder="At least 16 digits"
                       className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:border-teal-500 focus:outline-none"
                     />
                   </label>
@@ -404,13 +411,13 @@ export default function LoginPage() {
                   </label>
 
                   <label className="block">
-                    <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-600">Business ID Number (NIB)</span>
+                    <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-600">Business ID Number (Nomor Induk Berusaha)</span>
                     <input
                       type="text"
                       required
                       value={registerForm.business_id_number}
                       onChange={(event) => handleRegisterChange("business_id_number", event.target.value)}
-                      placeholder="13-digit NIB"
+                      placeholder="At least 13 digits NIB"
                       className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:border-teal-500 focus:outline-none"
                     />
                   </label>
@@ -454,7 +461,7 @@ export default function LoginPage() {
               {registerForm.user_type === "admin" ? (
                 <>
                   <label className="block">
-                    <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-600">Cooperative ID Number</span>
+                    <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-600">Cooperative ID Number (Nomor Induk Koperasi)</span>
                     <input
                       type="text"
                       required
