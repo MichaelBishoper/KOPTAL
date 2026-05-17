@@ -1,9 +1,6 @@
 export type AdminRow = {
   manager_id: number;
-  name: string;
-  email: string;
-  phone: string;
-  categories: string[];
+  username: string;
   password_hash: string;
   created_at: string;
 };
@@ -30,6 +27,7 @@ export type TenantRow = {
   verified: boolean;
   location?: string;
   image?: string;
+  cooperative_id_number: string;
   password_hash: string;
   created_at: string;
 };

@@ -5,6 +5,7 @@ const COOKIE_MAX_AGE = 60 * 60 * 24 * 30;
 
 type LoginRequest = {
   email?: string;
+  username?: string;
   password?: string;
   user_type?: "customer" | "tenant" | "admin";
 };
@@ -26,8 +27,16 @@ function decodeUserIdFromJwt(token: string): number | null {
 export async function POST(request: NextRequest): Promise<NextResponse> {
   const body = (await request.json().catch(() => null)) as LoginRequest | null;
 
-  if (!body?.email || !body?.password || !body?.user_type) {
+  if (!body?.password || !body?.user_type) {
     return NextResponse.json({ error: "Missing login credentials" }, { status: 400 });
+  }
+  
+  if (body.user_type === "admin" && !body.username) {
+    return NextResponse.json({ error: "Missing login credentials (username)" }, { status: 400 });
+  }
+
+  if (body.user_type !== "admin" && !body.email) {
+    return NextResponse.json({ error: "Missing login credentials (email)" }, { status: 400 });
   }
 
   try {

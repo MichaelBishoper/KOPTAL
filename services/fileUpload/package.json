@@ -5,7 +5,8 @@
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
-    "dev": "node --watch src/index.js"
+    "dev": "node --watch src/index.js",
+    "test": "mocha test/**/*.test.js --exit"
   },
   "keywords": [],
   "author": "",
@@ -21,6 +22,10 @@
     "uuid": "^14.0.0"
   },
   "devDependencies": {
-    "nodemon": "^3.1.14"
+    "chai": "^6.2.2",
+    "mocha": "^11.7.5",
+    "nodemon": "^3.1.14",
+    "sinon": "^22.0.0",
+    "supertest": "^7.2.2"
   }
 }

@@ -2,12 +2,12 @@ const client = require('../db');
 
 // Create
 async function createAdmin(adminData) {
-    const { name, email, phone, password_hash } = adminData;
+    const { username, password_hash } = adminData;
     const result = await client.query(
-        `INSERT INTO admins (name, email, phone, password_hash)
-         VALUES ($1, $2, $3, $4)
+        `INSERT INTO admins (username, password_hash)
+         VALUES ($1, $2)
          RETURNING *`,
-        [name, email, phone, password_hash]
+        [username, password_hash]
     );
     return result.rows[0];
 }
@@ -27,24 +27,22 @@ async function getAdminById(id) {
     return result.rows[0];
 }
 
-async function getAdminByEmail(email) {
+async function getAdminByUsername(username) {
     const result = await client.query(
-        `SELECT * FROM admins WHERE email = $1`, [email]
+        `SELECT * FROM admins WHERE username = $1`, [username]
     );
     return result.rows[0];
 }
 
 // Update
 async function updateAdmin(id, adminData) {
-    const { name, email, phone, image_url, image } = adminData;
-    const normalizedImage = image_url ?? image ?? null;
+    const { username } = adminData;
     const result = await client.query(
         `UPDATE admins
-         SET name = $1, email = $2, phone = $3,
-             image_url = COALESCE($5, image_url)
-         WHERE manager_id = $4
+         SET username = $1
+         WHERE manager_id = $2
          RETURNING *`,
-        [name, email, phone, id, normalizedImage || null]
+        [username, id]
     );
     return result.rows[0];
 }
@@ -54,7 +52,7 @@ async function updatePassword(adminId, newPasswordHash) {
         `UPDATE admins
          SET password_hash = $1
          WHERE manager_id = $2
-         RETURNING manager_id, name, email`,
+         RETURNING manager_id, username`,
         [newPasswordHash, adminId]
     );
     return result.rows[0];
@@ -70,7 +68,7 @@ module.exports = {
     createAdmin,
     getAllAdmins,
     getAdminById,
-    getAdminByEmail,
+    getAdminByUsername,
     updateAdmin,
     updatePassword,
     deleteAdmin

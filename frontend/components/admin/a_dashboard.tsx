@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { getAdminCategories, getTenantProducts, loadAdminSettings, saveAdminCategories } from "@/lib";
 import { TaxSettings } from "./TaxSettings";
+import { CreateAdminForm } from "./CreateAdminForm";
 
 export default function AdminDashboardComponent() {
   const [categories, setCategories] = useState<string[]>(() => getAdminCategories());
@@ -138,6 +139,11 @@ export default function AdminDashboardComponent() {
         {/* Tax Settings Section */}
         <div className="mt-8">
           <TaxSettings />
+        </div>
+
+        {/* Create Admin Section */}
+        <div className="mt-8">
+          <CreateAdminForm />
         </div>
       </div>
     </main>
