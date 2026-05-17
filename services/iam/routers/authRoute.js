@@ -17,7 +17,37 @@
                 setTimeout(() => reject(new AppError('Database unavailable, please try again later', 503)), DB_TIMEOUT_MS)
             ),
         ]);
-
+    
+    /**
+     * @swagger
+     * /auth/login:
+     *   post:
+     *     summary: Login user
+     *     tags: [Authentication]
+     *     requestBody:
+     *       required: true
+     *       content:
+     *         application/json:
+     *           schema:
+     *             type: object
+     *             required:
+     *               - email
+     *               - password
+     *               - user_type
+     *             properties:
+     *               email:
+     *                 type: string
+     *               password:
+     *                 type: string
+     *               user_type:
+     *                 type: string
+     *                 enum: [tenant, customer, admin]
+     *     responses:
+     *       200:
+     *         description: Login successful
+     *       401:
+     *         description: Invalid credentials
+     */
     router.post('/login', async (req, res, next) => {
         try {
             const { email, password, user_type } = req.body;
@@ -56,7 +86,49 @@
             return next(err);
         }
     });
-
+    
+    /**
+     * @swagger
+     * /auth/register:
+     *   post:
+     *     summary: Register new user
+     *     tags: [Authentication]
+     *     requestBody:
+     *       required: true
+     *       content:
+     *         application/json:
+     *           schema:
+     *             type: object
+     *             required:
+     *               - user_type
+     *               - name
+     *               - email
+     *               - phone
+     *               - password
+     *             properties:
+     *               user_type:
+     *                 type: string
+     *                 enum: [tenant, customer]
+     *               name:
+     *                 type: string
+     *               email:
+     *                 type: string
+     *               phone:
+     *                 type: string
+     *               password:
+     *                 type: string
+     *               company:
+     *                 type: string
+     *               tax_id:
+     *                 type: string
+     *               billing_address:
+     *                 type: string
+     *               shipping_address:
+     *                 type: string
+     *     responses:
+     *       201:
+     *         description: User created successfully
+     */
     router.post('/register', async (req, res, next) => {
         try {
             const { user_type, ...userData } = req.body;
@@ -88,8 +160,53 @@
             return next(err);
         }
     });
-
-    // Protected route to change password for the authenticated user
+    
+    /**
+     * @swagger
+     * /auth/change-password:
+     *   post:
+     *     summary: Change password for authenticated user
+     *     tags: [Authentication]
+     *     security:
+     *       - bearerAuth: []
+     *     requestBody:
+     *       required: true
+     *       content:
+     *         application/json:
+     *           schema:
+     *             type: object
+     *             required:
+     *               - currentPassword
+     *               - newPassword
+     *             properties:
+     *               currentPassword:
+     *                 type: string
+     *                 description: Current password of the user
+     *                 example: "oldPassword123"
+     *               newPassword:
+     *                 type: string
+     *                 description: New password to set
+     *                 example: "newPassword456"
+     *     responses:
+     *       200:
+     *         description: Password updated successfully
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: object
+     *               properties:
+     *                 message:
+     *                   type: string
+     *                   example: "Password updated successfully"
+     *       400:
+     *         description: Missing password fields or invalid user type
+     *       401:
+     *         description: Current password is incorrect
+     *       404:
+     *         description: User not found
+     */
+    
+    // Protected route to change password for an authenticated user
     router.post('/change-password', verifyToken, async (req, res, next) => {
         try {
             const { currentPassword, newPassword } = req.body;

@@ -5,6 +5,44 @@ const { getTenantById, updatePassword, updateTenant } = require('../dao/tenantDa
 const { comparePassword, hashPassword } = require('../utils/hashPasswords');
 const { AppError } = require('../middleware/errorHandler');
 
+/**
+ * @swagger
+ * /tenant/profile:
+ *   get:
+ *     summary: Get tenant profile (Tenant or Admin only)
+ *     tags: [Tenant]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Tenant profile retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 tenant_id:
+ *                   type: integer
+ *                 name:
+ *                   type: string
+ *                 email:
+ *                   type: string
+ *                 phone:
+ *                   type: string
+ *                 verified:
+ *                   type: boolean
+ *                 location:
+ *                   type: string
+ *                 image:
+ *                   type: string
+ *                 created_at:
+ *                   type: string
+ *                   format: date-time
+ *       403:
+ *         description: Access denied
+ *       404:
+ *         description: Tenant not found
+ */
 router.get('/profile', verifyToken, async (req, res, next) => {
     try {
         if (req.user.user_type !== 'tenant' && req.user.user_type !== 'admin') {
@@ -32,6 +70,42 @@ router.get('/profile', verifyToken, async (req, res, next) => {
     }
 });
 
+
+/**
+ * @swagger
+ * /tenant/profile:
+ *   put:
+ *     summary: Update own tenant profile (Tenant only)
+ *     tags: [Tenant]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               phone:
+ *                 type: string
+ *               location:
+ *                 type: string
+ *               image:
+ *                 type: string
+ *               image_url:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Profile updated successfully
+ *       403:
+ *         description: Access denied
+ *       404:
+ *         description: Tenant not found
+ */
 router.put('/profile', verifyToken, async (req, res, next) => {
     try {
         if (req.user.user_type !== 'tenant') {
@@ -69,6 +143,36 @@ router.put('/profile', verifyToken, async (req, res, next) => {
     }
 });
 
+/**
+ * @swagger
+ * /tenant/password:
+ *   put:
+ *     summary: Update tenant password (Tenant or Admin only)
+ *     tags: [Tenant]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - oldPassword
+ *               - newPassword
+ *             properties:
+ *               oldPassword:
+ *                 type: string
+ *               newPassword:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Password updated successfully
+ *       401:
+ *         description: Current password is incorrect
+ *       403:
+ *         description: Access denied
+ */
 router.put('/password', verifyToken, async (req, res, next) => {
     try {
         if (req.user.user_type !== 'tenant' && req.user.user_type !== 'admin') {
@@ -92,6 +196,46 @@ router.put('/password', verifyToken, async (req, res, next) => {
     }
 });
 
+/**
+ * @swagger
+ * /tenant/{id}:
+ *   put:
+ *     summary: Update any tenant by ID (Admin only)
+ *     tags: [Tenant]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Tenant ID to update
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               phone:
+ *                 type: string
+ *               location:
+ *                 type: string
+ *               image_url:
+ *                 type: string
+ *               image:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Tenant updated successfully
+ *       404:
+ *         description: Tenant not found
+ */
 router.put('/:id', verifyToken, async (req, res, next) => {
     try {
         const { id } = req.params;

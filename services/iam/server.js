@@ -1,9 +1,10 @@
 // IAM Application Server
 const { errorHandler } = require('./middleware/errorHandler');
 const express = require('express');
+const client = require('./db');
+// For Swagger
 const swaggerJsdoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
-const client = require('./db');
 
 const authRoutes = require('./routers/authRoute');
 const publicRoutes = require('./routers/publicRoutes');
@@ -21,7 +22,7 @@ const swaggerOptions = {
         info: {
             title: 'IAM Service', 
             version: '1.0.0',
-            description: 'Description of what this specific service does',
+            description: 'Identity Access Management Server for KOPTAL',
         },
         servers: [
             {
@@ -43,6 +44,7 @@ const swaggerOptions = {
     apis: ['./routers/*.js'], 
 };
 
+// Swagger endpoint
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
