@@ -3,6 +3,11 @@ const express = require('express');
 const app = express();
 const port = process.env.PORT || 4002;
 
+app.use((req, res, next) => {
+    console.log(`[Order] ${req.method} ${req.url}`);
+    next();
+});
+
 const swaggerJsdoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
 

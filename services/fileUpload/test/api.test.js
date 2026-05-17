@@ -30,7 +30,6 @@ describe('File Upload Service API', () => {
 
   describe('GET /files/:file_id', () => {
     it('should return 404 for an unknown file ID', async () => {
-      // Mock the DB returning no rows
       queryStub.resolves({ rows: [] });
 
       const res = await request(app).get('/files/999999');

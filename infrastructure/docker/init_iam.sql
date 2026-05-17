@@ -37,8 +37,7 @@ CREATE TABLE admins (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Seed data
-INSERT INTO tenants (name, email, phone, verified, password_hash, location, image_url, cooperative_id_number) VALUES
+\INSERT INTO tenants (name, email, phone, verified, password_hash, location, image_url, cooperative_id_number) VALUES
 ('Rafael Fresh Foods', 'rafael@marketplace.com', '555-0101', true, '$2b$10$hbe.nOvtI2fgGyvEr2gwD.Ydn5tqlxrXZm77ejMd.oB5xmjg0Sh8u', '123 Harvest Road, Jakarta', 'https://images.example.com/rafael.jpg', 'COOP-001');
 
 INSERT INTO customers (name, email, phone, company, business_id_number, corporate_tax_id, billing_address, shipping_address, password_hash) VALUES

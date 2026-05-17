@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const IAM_URL = process.env.IAM_URL ?? process.env.NEXT_PUBLIC_IAM_URL ?? "http://localhost:3001";
+const IAM_URL = process.env.IAM_URL ?? process.env.NEXT_PUBLIC_IAM_URL ?? "http://127.0.0.1:3001";
 
 type RouteContext = {
   params: Promise<{ path: string[] }>;

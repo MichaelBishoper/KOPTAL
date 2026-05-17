@@ -7,7 +7,10 @@ const INVENTORY_SERVICE_URL = process.env.INVENTORY_SERVICE_URL || 'http://local
 async function readDistinctCategoriesFromProducts() {
   try {
     const res = await fetch(`${INVENTORY_SERVICE_URL}/api/products`);
-    if (!res.ok) return [];
+    if (!res.ok) {
+      console.warn(`Inventory service returned ${res.status} when fetching products for categories`);
+      return [];
+    }
     const json = await res.json();
     const products = Array.isArray(json.data) ? json.data : [];
     const categories = products
@@ -15,7 +18,7 @@ async function readDistinctCategoriesFromProducts() {
       .filter((category) => typeof category === 'string' && category.trim() !== '');
     return [...new Set(categories)];
   } catch (err) {
-    console.error('Failed to read categories from inventory service:', err.message);
+    console.error('Failed to reach inventory service for categories:', err.message);
     return [];
   }
 }

@@ -15,6 +15,11 @@ const adminRoutes = require('./routers/adminRoutes');
 const app = express();
 const casiopea = process.env.PORT || 3000;
 
+app.use((req, res, next) => {
+    console.log(`[IAM] ${req.method} ${req.url}`);
+    next();
+});
+
 // Swagger definition
 const swaggerOptions = {
     definition: {
@@ -60,6 +65,10 @@ app.get('/debug', (req, res) => {
 // Error handler
 app.use(errorHandler);
 
-app.listen(casiopea, () => {
-    console.log(`Server running on port ${casiopea}`);
-});
+if (require.main === module) {
+    app.listen(casiopea, () => {
+        console.log(`Server running on port ${casiopea}`);
+    });
+}
+
+module.exports = app;

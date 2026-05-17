@@ -1,5 +1,4 @@
 
--- uploaded_files
 CREATE TABLE uploaded_files (
     file_id SERIAL PRIMARY KEY,
     entity_type VARCHAR(50) NOT NULL,

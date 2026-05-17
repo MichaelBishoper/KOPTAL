@@ -6,7 +6,8 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "mocha --loader tsx test/**/*.test.ts"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
@@ -20,9 +21,12 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "chai": "^6.2.2",
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
+    "mocha": "^11.7.5",
     "tailwindcss": "^4",
+    "tsx": "^4.19.2",
     "typescript": "^5"
   }
 }

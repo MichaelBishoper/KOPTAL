@@ -8,14 +8,21 @@ async function fetchFromInventory(path, options = {}) {
         'Content-Type': 'application/json',
         ...(options.headers || {})
     };
-    const res = await fetch(url, { ...options, headers });
-    if (!res.ok) {
-        const errJson = await res.json().catch(() => ({}));
-        const error = new Error(errJson.error || `Inventory service returned ${res.status}`);
-        error.statusCode = res.status;
+    try {
+        const res = await fetch(url, { ...options, headers });
+        if (!res.ok) {
+            const errJson = await res.json().catch(() => ({}));
+            const error = new Error(errJson.error || `Inventory service returned ${res.status}`);
+            error.statusCode = res.status;
+            throw error;
+        }
+        return res.json();
+    } catch (err) {
+        if (err.statusCode) throw err;
+        const error = new Error(`Inventory service unavailable: ${err.message}`);
+        error.statusCode = 503;
         throw error;
     }
-    return res.json();
 }
 
 // Create
@@ -34,9 +41,7 @@ async function addLineItem(data) {
         const prodRes = await fetchFromInventory(`/api/products/${product_id}`);
         product = prodRes.data;
     } catch (err) {
-        const error = new Error(err.message || 'Product not found');
-        error.statusCode = err.statusCode || 404;
-        throw error;
+        throw err;
     }
 
     if (!product) {

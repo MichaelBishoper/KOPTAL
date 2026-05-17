@@ -1,4 +1,3 @@
--- units
 CREATE TABLE units (
     unit_id SERIAL PRIMARY KEY,
     unit_name VARCHAR(50) UNIQUE NOT NULL,
@@ -6,7 +5,6 @@ CREATE TABLE units (
     unit_type VARCHAR(50)
 );
 
--- products (no FK to tenants — tenant_id is a logical reference to the IAM service)
 CREATE TABLE tenant_products (
     product_id SERIAL PRIMARY KEY,
     tenant_id INT NOT NULL,

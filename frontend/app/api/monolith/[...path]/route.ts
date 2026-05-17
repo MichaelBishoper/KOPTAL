@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const INVENTORY_URL = process.env.INVENTORY_URL ?? "http://localhost:4001";
-const ORDER_URL = process.env.ORDER_URL ?? "http://localhost:4002";
-const ADMINCONF_URL = process.env.ADMINCONF_URL ?? "http://localhost:4003";
+const INVENTORY_URL = process.env.INVENTORY_URL ?? "http://127.0.0.1:4001";
+const ORDER_URL = process.env.ORDER_URL ?? "http://127.0.0.1:4002";
+const ADMINCONF_URL = process.env.ADMINCONF_URL ?? "http://127.0.0.1:4003";
 
 type RouteContext = {
   params: Promise<{ path: string[] }>;
@@ -21,8 +21,8 @@ async function proxy(request: NextRequest, context: RouteContext): Promise<NextR
   } else if (upstreamPath.startsWith("admin")) {
     targetBaseUrl = ADMINCONF_URL;
   } else {
-    // Fallback
-    targetBaseUrl = process.env.MONOLITH_URL ?? "http://localhost:4000";
+    // If no specific service matches, we return a 404 since the monolith is gone
+    return NextResponse.json({ error: `Path /api/monolith/${upstreamPath} not mapped to any microservice` }, { status: 404 });
   }
 
   const targetUrl = `${targetBaseUrl}/api/${upstreamPath}${request.nextUrl.search}`;

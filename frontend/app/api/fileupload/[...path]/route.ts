@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const FILEUPLOAD_URL = process.env.FILEUPLOAD_URL ?? process.env.NEXT_PUBLIC_FILEUPLOAD_URL ?? "http://localhost:3002";
+const FILEUPLOAD_URL = process.env.FILEUPLOAD_URL ?? process.env.NEXT_PUBLIC_FILEUPLOAD_URL ?? "http://127.0.0.1:3002";
 
 type RouteContext = {
   params: Promise<{ path: string[] }>;

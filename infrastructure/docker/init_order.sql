@@ -1,4 +1,3 @@
--- purchase_orders (no FK to customers or tenants — logical references only)
 CREATE TABLE purchase_orders (
     po_id SERIAL PRIMARY KEY,
     po_number VARCHAR(50) UNIQUE NOT NULL,
@@ -14,7 +13,6 @@ CREATE TABLE purchase_orders (
     total_amount DECIMAL(12,2) DEFAULT 0
 );
 
--- po_line_items (no FK to products since it lives in a separate DB)
 CREATE TABLE po_line_items (
     po_item_id SERIAL PRIMARY KEY,
     po_id INT NOT NULL REFERENCES purchase_orders(po_id) ON DELETE CASCADE,

@@ -15,20 +15,6 @@ services:
       - ./infrastructure/docker/init_iam.sql:/docker-entrypoint-initdb.d/init.sql
     restart: unless-stopped
 
-  db_monolith:
-    image: postgres:15-alpine
-    container_name: koptal_db_monolith
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password123
-      POSTGRES_DB: koptal_monolith
-    ports:
-      - "5434:5432"
-    volumes:
-      - pg_data_monolith:/var/lib/postgresql/data
-      - ./infrastructure/docker/init_monolith.sql:/docker-entrypoint-initdb.d/init.sql
-    restart: unless-stopped
-
   db_files:
     image: postgres:15-alpine
     container_name: koptal_db_files
@@ -50,8 +36,8 @@ services:
     ports:
       - "3001:3001"
     volumes:
-      - ./services/iam:/app 
-      - /app/node_modules     
+      - ./services/iam:/app
+      - /app/node_modules
     environment:
       - PORT=3001
       - PG_HOST=db_iam
@@ -62,27 +48,6 @@ services:
       - JWT_SECRET=some_test_secret
     depends_on:
       - db_iam
-    restart: unless-stopped
-
-  monolith:
-    build:
-      context: ./services/monolith
-    container_name: koptal_monolith
-    ports:
-      - "4000:4000"
-    environment:
-      - PORT=4000
-      - PG_HOST=db_monolith
-      - PG_PORT=5432
-      - PG_USER=postgres
-      - PG_PASSWORD=password123
-      - PG_DATABASE=koptal_monolith
-      - JWT_SECRET=some_test_secret
-    volumes:
-      - ./services/monolith:/app
-      - /app/node_modules
-    depends_on:
-      - db_monolith
     restart: unless-stopped
 
   fileupload:
@@ -101,14 +66,125 @@ services:
       - DB_PORT=5432
       - BASE_URL=http://localhost:3002
     volumes:
-      - ./services/fileUpload:/app      
-      - /app/node_modules               
+      - ./services/fileUpload:/app
+      - /app/node_modules
       - ./uploads:/app/src/uploads/
     depends_on:
       - db_files
     restart: unless-stopped
 
+  db_order:
+    image: postgres:15-alpine
+    container_name: koptal_db_order
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password123
+      POSTGRES_DB: koptal_order
+    ports:
+      - "5436:5432"
+    volumes:
+      - pg_data_order:/var/lib/postgresql/data
+      - ./infrastructure/docker/init_order.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: unless-stopped
+
+  db_inventory:
+    image: postgres:15-alpine
+    container_name: koptal_db_inventory
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password123
+      POSTGRES_DB: koptal_inventory
+    ports:
+      - "5437:5432"
+    volumes:
+      - pg_data_inventory:/var/lib/postgresql/data
+      - ./infrastructure/docker/init_inventory.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: unless-stopped
+
+  order:
+    build:
+      context: ./services/order
+    container_name: koptal_order
+    ports:
+      - "4002:4002"
+    environment:
+      - PORT=4002
+      - PG_HOST=db_order
+      - PG_PORT=5432
+      - PG_USER=postgres
+      - PG_PASSWORD=password123
+      - PG_DATABASE=koptal_order
+      - JWT_SECRET=some_test_secret
+      - INVENTORY_SERVICE_URL=http://inventory:4001
+    volumes:
+      - ./services/order:/app
+      - /app/node_modules
+    depends_on:
+      - db_order
+      - inventory
+    restart: unless-stopped
+
+  inventory:
+    build:
+      context: ./services/inventory
+    container_name: koptal_inventory
+    ports:
+      - "4001:4001"
+    environment:
+      - PORT=4001
+      - PG_HOST=db_inventory
+      - PG_PORT=5432
+      - PG_USER=postgres
+      - PG_PASSWORD=password123
+      - PG_DATABASE=koptal_inventory
+      - JWT_SECRET=some_test_secret
+    volumes:
+      - ./services/inventory:/app
+      - /app/node_modules
+    depends_on:
+      - db_inventory
+    restart: unless-stopped
+
+  db_adminconf:
+    image: postgres:15-alpine
+    container_name: koptal_db_adminconf
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password123
+      POSTGRES_DB: koptal_adminconf
+    ports:
+      - "5438:5432"
+    volumes:
+      - pg_data_adminconf:/var/lib/postgresql/data
+      - ./infrastructure/docker/init_adminconf.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: unless-stopped
+
+  adminconf:
+    build:
+      context: ./services/adminconf
+    container_name: koptal_adminconf
+    ports:
+      - "4003:4003"
+    environment:
+      - PORT=4003
+      - PG_HOST=db_adminconf
+      - PG_PORT=5432
+      - PG_USER=postgres
+      - PG_PASSWORD=password123
+      - PG_DATABASE=koptal_adminconf
+      - JWT_SECRET=some_test_secret
+      - INVENTORY_SERVICE_URL=http://inventory:4001
+    volumes:
+      - ./services/adminconf:/app
+      - /app/node_modules
+    depends_on:
+      - db_adminconf
+      - inventory
+    restart: unless-stopped
+
 volumes:
   pg_data_iam:
-  pg_data_monolith:
   pg_data_files:
+  pg_data_order:
+  pg_data_inventory:
+  pg_data_adminconf:
