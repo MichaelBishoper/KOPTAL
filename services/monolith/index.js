@@ -3,8 +3,38 @@ const express = require('express');
 const app = express();
 const port = process.env.PORT || 4000;
 
+const swaggerJsdoc = require('swagger-jsdoc');
+const swaggerUi = require('swagger-ui-express');
+
+// Get along, get along Kid Charlemagne
 // middleware
 app.use(express.json());
+
+// Swagger definition
+const swaggerOptions = {
+    definition: {
+        openapi: '3.0.0',
+        info: {
+            title: 'Monolith Service',
+            version: '1.0.0',
+            description: 'Product and Purchase Order Service for KOPTAL',
+        },
+        components: {
+            securitySchemes: {
+                bearerAuth: {
+                    type: 'http',
+                    scheme: 'bearer',
+                    bearerFormat: 'JWT',
+                },
+            },
+        },
+        security: [{ bearerAuth: [] }],
+    },
+    apis: ['./src/routes/*.js'], 
+};
+
+const swaggerSpec = swaggerJsdoc(swaggerOptions);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // routes
 const unitsRoutes = require('./src/routes/unitsRoutes');

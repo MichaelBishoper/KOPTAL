@@ -20,18 +20,8 @@ const swaggerOptions = {
             version: '1.0.0',
             description: 'Koptal File Upload/Retrieval Service',
         },
-        servers: [
-            {
-                url: `http://localhost:${process.env.PORT || 3002}`,
-                description: 'File Upload Service',
-            },
-            {
-                url: `http://localhost:${process.env.PORT || 3001}`,
-                description: 'IAM Service',
-            },
-        ],
     },
-    apis: ['./index.js'], 
+    apis: [path.join(__dirname, 'index.js')], 
 };
 
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
