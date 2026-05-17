@@ -331,6 +331,7 @@ export default function LoginPage() {
                   required
                   value={registerForm.name}
                   onChange={(event) => handleRegisterChange("name", event.target.value)}
+                  placeholder="Your full name"
                   className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:border-teal-500 focus:outline-none"
                 />
               </label>
@@ -342,6 +343,7 @@ export default function LoginPage() {
                   required
                   value={registerForm.email}
                   onChange={(event) => handleRegisterChange("email", event.target.value)}
+                  placeholder="Valid email address"
                   className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:border-teal-500 focus:outline-none"
                 />
               </label>
@@ -353,6 +355,7 @@ export default function LoginPage() {
                   required
                   value={registerForm.phone}
                   onChange={(event) => handleRegisterChange("phone", event.target.value)}
+                  placeholder="Indonesian format (e.g. 0812...)"
                   className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:border-teal-500 focus:outline-none"
                 />
               </label>
@@ -364,6 +367,7 @@ export default function LoginPage() {
                   required
                   value={registerForm.password}
                   onChange={(event) => handleRegisterChange("password", event.target.value)}
+                  placeholder="At least 8 characters long"
                   className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:border-teal-500 focus:outline-none"
                 />
               </label>
@@ -406,6 +410,7 @@ export default function LoginPage() {
                       required
                       value={registerForm.company}
                       onChange={(event) => handleRegisterChange("company", event.target.value)}
+                      placeholder="Registered company name"
                       className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:border-teal-500 focus:outline-none"
                     />
                   </label>
@@ -429,7 +434,7 @@ export default function LoginPage() {
                       required
                       value={registerForm.corporate_tax_id}
                       onChange={(event) => handleRegisterChange("corporate_tax_id", event.target.value)}
-                      placeholder="e.g. 01.234.567.8-901.234"
+                      placeholder="01.234.567.8-901.234"
                       className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:border-teal-500 focus:outline-none"
                     />
                   </label>
@@ -441,6 +446,7 @@ export default function LoginPage() {
                       required
                       value={registerForm.billing_address}
                       onChange={(event) => handleRegisterChange("billing_address", event.target.value)}
+                      placeholder="Complete billing address"
                       className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:border-teal-500 focus:outline-none"
                     />
                   </label>
@@ -452,6 +458,7 @@ export default function LoginPage() {
                       required
                       value={registerForm.shipping_address}
                       onChange={(event) => handleRegisterChange("shipping_address", event.target.value)}
+                      placeholder="Complete shipping address"
                       className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:border-teal-500 focus:outline-none"
                     />
                   </label>
@@ -467,7 +474,7 @@ export default function LoginPage() {
                       required
                       value={registerForm.cooperative_id_number}
                       onChange={(event) => handleRegisterChange("cooperative_id_number", event.target.value)}
-                      placeholder="e.g. 1234.5678.90"
+                      placeholder="At least 5 characters"
                       className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:border-teal-500 focus:outline-none"
                     />
                   </label>
