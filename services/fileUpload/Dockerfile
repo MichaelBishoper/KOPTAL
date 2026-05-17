@@ -20,4 +20,4 @@ RUN mkdir -p /app/src/uploads
 EXPOSE 3002
 
 # run the app
-CMD ["node", "index.js"]
+CMD ["npm", "run", "dev"]
