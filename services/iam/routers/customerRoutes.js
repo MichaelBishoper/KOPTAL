@@ -5,6 +5,46 @@ const { getCustomerById, updateCustomer, updatePassword } = require('../dao/cust
 const { comparePassword, hashPassword } = require('../utils/hashPasswords');
 const { AppError } = require('../middleware/errorHandler');
 
+/**
+ * @swagger
+ * /customer/profile:
+ *   get:
+ *     summary: Get customer profile (Customer or Admin only)
+ *     tags: [Customer]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Customer profile retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 customer_id:
+ *                   type: integer
+ *                 name:
+ *                   type: string
+ *                 email:
+ *                   type: string
+ *                 phone:
+ *                   type: string
+ *                 company:
+ *                   type: string
+ *                 tax_id:
+ *                   type: string
+ *                 billing_address:
+ *                   type: string
+ *                 shipping_address:
+ *                   type: string
+ *                 created_at:
+ *                   type: string
+ *                   format: date-time
+ *       403:
+ *         description: Access denied
+ *       404:
+ *         description: Customer not found
+ */
 router.get('/profile', verifyToken, async (req, res, next) => {
     try {
         if (req.user.user_type !== 'customer') {
@@ -23,6 +63,45 @@ router.get('/profile', verifyToken, async (req, res, next) => {
     }
 });
 
+/**
+ * @swagger
+ * /customer/profile:
+ *   put:
+ *     summary: Update customer profile (Customer or Admin only)
+ *     tags: [Customer]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               phone:
+ *                 type: string
+ *               company:
+ *                 type: string
+ *               tax_id:
+ *                 type: string
+ *               billing_address:
+ *                 type: string
+ *               shipping_address:
+ *                 type: string
+ *               image:
+ *                 type: string
+ *               image_url:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Profile updated successfully
+ *       403:
+ *         description: Access denied
+ */
 router.put('/profile', verifyToken, async (req, res, next) => {
     try {
         if (req.user.user_type !== 'customer') {
@@ -43,6 +122,36 @@ router.put('/profile', verifyToken, async (req, res, next) => {
     }
 });
 
+/**
+ * @swagger
+ * /customer/password:
+ *   put:
+ *     summary: Update customer password (Customer or Admin only)
+ *     tags: [Customer]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - oldPassword
+ *               - newPassword
+ *             properties:
+ *               oldPassword:
+ *                 type: string
+ *               newPassword:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Password updated successfully
+ *       401:
+ *         description: Current password is incorrect
+ *       403:
+ *         description: Access denied
+ */
 router.put('/password', verifyToken, async (req, res, next) => {
     try {
         if (req.user.user_type !== 'customer') {
