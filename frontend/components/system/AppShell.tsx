@@ -26,6 +26,7 @@ export default function AppShell({
   const hasPreloadedRef = useRef(false);
   const isLoginPage = pathname === "/login";
   const isCheckoutPage = pathname === "/system/checkout";
+  const isAdminPage = pathname.startsWith("/admin");
 
   useEffect(() => {
     if (isLoginPage || hasPreloadedRef.current) return;
@@ -50,7 +51,7 @@ export default function AppShell({
     })();
   }, [isLoginPage]);
 
-  if (isLoginPage || isCheckoutPage) {
+  if (isLoginPage || isCheckoutPage || isAdminPage) {
     return (
       <>
         <ScrollToTop />

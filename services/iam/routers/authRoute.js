@@ -5,7 +5,7 @@
     const { verifyToken } = require('../middleware/auth');
     const { getTenantById, getTenantByEmail, createTenant, updateTenant, updatePassword: updateTenantPassword } = require('../dao/tenantDao');
     const { getCustomerById, getCustomerByEmail, createCustomer, updateCustomer, updatePassword: updateCustomerPassword } = require('../dao/customerDao');
-    const { getAdminById, getAdminByEmail, createAdmin, updateAdmin, updatePassword: updateAdminPassword } = require('../dao/adminDao');
+    const { getAdminById, getAdminByUsername, createAdmin, updateAdmin, updatePassword: updateAdminPassword } = require('../dao/adminDao');
     const { comparePassword, hashPassword } = require('../utils/hashPasswords');
     const { AppError } = require('../middleware/errorHandler');
 
@@ -50,20 +50,23 @@
      */
     router.post('/login', async (req, res, next) => {
         try {
-            const { email, password, user_type } = req.body;
+            const { email, username, password, user_type } = req.body;
 
-            if (!email || !password || !user_type) {
+            if (!password || !user_type) {
                 return next(new AppError('Missing login fields', 400));
             }
 
             // Choose user based on role
             let user;
             if (user_type === 'tenant') {
+                if (!email) return next(new AppError('Missing email', 400));
                 user = await withDbTimeout(getTenantByEmail(email));
             } else if (user_type === 'customer') {
+                if (!email) return next(new AppError('Missing email', 400));
                 user = await withDbTimeout(getCustomerByEmail(email));
             } else if (user_type === 'admin') {
-                user = await withDbTimeout(getAdminByEmail(email));
+                if (!username) return next(new AppError('Missing username', 400));
+                user = await withDbTimeout(getAdminByUsername(username));
             } else {
                 return next(new AppError('Invalid user type', 400));
             }
@@ -76,12 +79,12 @@
                 {
                     user_id: user.tenant_id || user.customer_id || user.manager_id,
                     user_type: user_type,
-                    email: user.email
+                    email: user.email || user.username
                 },
                 process.env.JWT_SECRET
             );
 
-            res.json({ token, user_type, name: user.name });
+            res.json({ token, user_type, name: user.name || user.username });
         } catch (err) {
             return next(err);
         }
@@ -142,20 +145,49 @@
                 if (!String(userData.location || '').trim()) {
                     return next(new AppError('Tenant location is required', 400));
                 }
+                if (!String(userData.cooperative_id_number || '').trim()) {
+                    return next(new AppError('Cooperative ID Number is required', 400));
+                }
 
                 userData.password_hash = await hashPassword(userData.password);
                 result = await withDbTimeout(createTenant(userData));
             } else if (user_type === 'customer') {
                 userData.password_hash = await hashPassword(userData.password);
                 result = await withDbTimeout(createCustomer(userData));
-            } else if (user_type === 'admin') {
-                userData.password_hash = await hashPassword(userData.password);
-                result = await withDbTimeout(createAdmin(userData));
             } else {
                 return next(new AppError('Invalid user type', 400));
             }
 
-            res.status(201).json({ message: `${user_type} created successfully`, id: result.id });
+            res.status(201).json({ message: `${user_type} created successfully`, id: result?.tenant_id || result?.customer_id });
+        } catch (err) {
+            return next(err);
+        }
+    });
+
+    /**
+     * @swagger
+     * /auth/register-admin:
+     *   post:
+     *     summary: Register new admin (Protected)
+     *     tags: [Authentication]
+     *     security:
+     *       - bearerAuth: []
+     */
+    router.post('/register-admin', verifyToken, async (req, res, next) => {
+        try {
+            if (req.user.user_type !== 'admin') {
+                return next(new AppError('Forbidden: Only admins can create new admins', 403));
+            }
+
+            const { username, password } = req.body;
+            if (!username || !password) {
+                return next(new AppError('Missing username or password', 400));
+            }
+
+            const password_hash = await hashPassword(password);
+            const result = await withDbTimeout(createAdmin({ username, password_hash }));
+
+            res.status(201).json({ message: 'Admin created successfully', manager_id: result.manager_id });
         } catch (err) {
             return next(err);
         }

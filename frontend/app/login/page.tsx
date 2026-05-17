@@ -144,15 +144,6 @@ export default function LoginPage() {
       password: registerForm.password,
     };
 
-    if (registerForm.user_type === "admin") {
-      if (!registerForm.cooperative_id_number.trim() || registerForm.cooperative_id_number.trim().length < 5) {
-        setError("Cooperative ID Number (Nomor Induk Koperasi) must be at least 5 characters long.");
-        setLoading(false);
-        return;
-      }
-      payload.cooperative_id_number = registerForm.cooperative_id_number.trim();
-    }
-
     if (registerForm.user_type === "customer") {
       if (!registerForm.business_id_number.trim() || registerForm.business_id_number.trim().length < 13) {
         setError("Business ID Number (Nomor Induk Berusaha) must be at least 13 digits.");
@@ -173,8 +164,8 @@ export default function LoginPage() {
     }
 
     if (registerForm.user_type === "tenant") {
-      if (!registerForm.national_id_number.trim() || registerForm.national_id_number.trim().length < 16) {
-        setError("National ID Number (Nomor Induk Kependudukan) must be at least 16 digits.");
+      if (!registerForm.cooperative_id_number.trim() || registerForm.cooperative_id_number.trim().length < 5) {
+        setError("Cooperative ID Number (Nomor Induk Koperasi) must be at least 5 characters long.");
         setLoading(false);
         return;
       }
@@ -184,7 +175,7 @@ export default function LoginPage() {
         return;
       }
 
-      payload.national_id_number = registerForm.national_id_number.trim();
+      payload.cooperative_id_number = registerForm.cooperative_id_number.trim();
       payload.location = registerForm.location.trim();
     }
 
@@ -275,7 +266,6 @@ export default function LoginPage() {
                 >
                   <option value="customer">Customer</option>
                   <option value="tenant">Tenant</option>
-                  <option value="admin">Admin</option>
                 </select>
               </label>
 
@@ -320,7 +310,6 @@ export default function LoginPage() {
                 >
                   <option value="customer">Customer</option>
                   <option value="tenant">Tenant</option>
-                  <option value="admin">Admin</option>
                 </select>
               </label>
 
@@ -375,13 +364,13 @@ export default function LoginPage() {
               {registerForm.user_type === "tenant" ? (
                 <>
                   <label className="block">
-                    <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-600">National ID Number (Nomor Induk Kependudukan)</span>
+                    <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-600">Cooperative ID Number (Nomor Induk Koperasi)</span>
                     <input
                       type="text"
                       required
-                      value={registerForm.national_id_number}
-                      onChange={(event) => handleRegisterChange("national_id_number", event.target.value)}
-                      placeholder="At least 16 digits"
+                      value={registerForm.cooperative_id_number}
+                      onChange={(event) => handleRegisterChange("cooperative_id_number", event.target.value)}
+                      placeholder="At least 5 characters"
                       className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:border-teal-500 focus:outline-none"
                     />
                   </label>

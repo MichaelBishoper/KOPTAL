@@ -6,7 +6,7 @@ CREATE TABLE units (
     unit_type VARCHAR(50)          
 );
 
--- tenants
+-- tenants (shops)
 CREATE TABLE tenants (
     tenant_id SERIAL PRIMARY KEY,
     name VARCHAR(100) UNIQUE NOT NULL,
@@ -16,6 +16,7 @@ CREATE TABLE tenants (
     password_hash VARCHAR(255) NOT NULL,
     location VARCHAR(255),
     image_url VARCHAR(500),
+    cooperative_id_number VARCHAR(255) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -37,12 +38,8 @@ CREATE TABLE customers (
 -- admins
 CREATE TABLE admins (
     manager_id SERIAL PRIMARY KEY,
-    name VARCHAR(100) UNIQUE NOT NULL,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    phone VARCHAR(255) UNIQUE NOT NULL,
+    username VARCHAR(100) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
-    image_url VARCHAR(500),
-    categories TEXT[],
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
