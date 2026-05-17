@@ -4,8 +4,38 @@ const pool = require('./config/db');
 const multer = require('multer');
 const { v4: uuidv4 } = require('uuid');
 const path = require('path');
+// Swagger
+const swaggerJsdoc = require('swagger-jsdoc');
+const swaggerUi = require('swagger-ui-express');
+
 
 const app = express();
+
+// Swagger definition
+const swaggerOptions = {
+    definition: {
+        openapi: '3.0.0',
+        info: {
+            title: 'File Upload Service',
+            version: '1.0.0',
+            description: 'Koptal File Upload/Retrieval Service',
+        },
+        servers: [
+            {
+                url: `http://localhost:${process.env.PORT || 3002}`,
+                description: 'File Upload Service',
+            },
+            {
+                url: `http://localhost:${process.env.PORT || 3001}`,
+                description: 'IAM Service',
+            },
+        ],
+    },
+    apis: ['./index.js'], 
+};
+
+const swaggerSpec = swaggerJsdoc(swaggerOptions);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // upload directory
 const fs = require('fs');
@@ -32,10 +62,78 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
+/**
+ * @swagger
+ * /health:
+ *   get:
+ *     summary: Health check
+ *     tags: [FileUpload]
+ *     responses:
+ *       200:
+ *         description: Service is healthy
+ */
+
 // health check
 app.get('/health', (req, res) => {
   res.send('OK');
 });
+
+/**
+ * @swagger
+ * /upload:
+ *   post:
+ *     summary: Upload a file
+ *     tags: [FileUpload]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - file
+ *               - entity_type
+ *               - entity_id
+ *             properties:
+ *               file:
+ *                 type: string
+ *                 format: binary
+ *                 description: The file to upload
+ *               entity_type:
+ *                 type: string
+ *                 description: Type of entity (e.g., tenant, product, customer)
+ *               entity_id:
+ *                 type: integer
+ *                 description: ID of the entity this file belongs to
+ *     responses:
+ *       200:
+ *         description: File uploaded successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 file_id:
+ *                   type: integer
+ *                 entity_type:
+ *                   type: string
+ *                 entity_id:
+ *                   type: integer
+ *                 file_name:
+ *                   type: string
+ *                 file_path:
+ *                   type: string
+ *                 mime_type:
+ *                   type: string
+ *                 file_size:
+ *                   type: integer
+ *                 url:
+ *                   type: string
+ *       400:
+ *         description: No file uploaded or missing entity fields
+ *       500:
+ *         description: Database insert failed
+ */
 
 // upload endpoint
 app.post('/upload', upload.single('file'), async (req, res) => {
@@ -79,6 +177,37 @@ app.post('/upload', upload.single('file'), async (req, res) => {
     res.status(500).json({ error: 'Database insert failed', details: (err && err.message) ? err.message : String(err) });
   }
 });
+
+/**
+ * @swagger
+ * /files/{file_id}:
+ *   get:
+ *     summary: Retrieve a file by ID
+ *     tags: [FileUpload]
+ *     parameters:
+ *       - in: path
+ *         name: file_id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID of the file to retrieve
+ *     responses:
+ *       200:
+ *         description: File retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 file_path:
+ *                   type: string
+ *                 mime_type:
+ *                   type: string
+ *       404:
+ *         description: File not found
+ *       500:
+ *         description: Server error
+ */
 
 // GET Route
 app.get('/files/:file_id', async (req, res) => {
