@@ -1,3 +1,5 @@
+import api from "@/lib/axios";
+
 export type AdminSettings = {
   categories: string[];
   tax_rate: number;
@@ -23,15 +25,11 @@ function normalizeTaxRate(taxRate: unknown): number {
 
 export async function fetchAdminSettingsFromAPI(): Promise<AdminSettings | null> {
   try {
-    const res = await fetch("/api/monolith/admin/settings", {
-      credentials: "include",
-      cache: "no-store",
-    });
+    const res = await api.get<{ data?: { categories?: unknown; tax_rate?: unknown } }>(
+      "/api/adminconf/admin/settings"
+    );
 
-    if (!res.ok) return null;
-
-    const json = (await res.json()) as { data?: { categories?: unknown; tax_rate?: unknown } };
-    const data = json.data ?? {};
+    const data = res.data.data ?? {};
 
     return {
       categories: normalizeCategories(data.categories),
@@ -44,20 +42,12 @@ export async function fetchAdminSettingsFromAPI(): Promise<AdminSettings | null>
 
 export async function updateAdminSettingsOnAPI(patch: Partial<AdminSettings>): Promise<AdminSettings | null> {
   try {
-    const res = await fetch("/api/monolith/admin/settings", {
-      method: "PUT",
-      credentials: "include",
-      cache: "no-store",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(patch),
-    });
+    const res = await api.put<{ data?: { categories?: unknown; tax_rate?: unknown } }>(
+      "/api/adminconf/admin/settings",
+      patch
+    );
 
-    if (!res.ok) return null;
-
-    const json = (await res.json()) as { data?: { categories?: unknown; tax_rate?: unknown } };
-    const data = json.data ?? {};
+    const data = res.data.data ?? {};
 
     return {
       categories: normalizeCategories(data.categories),

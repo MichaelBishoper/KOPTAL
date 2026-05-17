@@ -3,6 +3,7 @@ import { fetchAuthSessionFromAPI } from "@/fetch/auth";
 import { fetchTenantProductByIdFromAPI } from "@/fetch/tenant-products";
 import { fetchTenantsFromAPI } from "@/fetch/tenants";
 import { fetchCustomersFromAPI } from "@/fetch/customers";
+import api from "@/lib/axios";
 
 type CreatePurchaseOrderPayload = {
   tenant_id: number;
@@ -96,18 +97,13 @@ async function fetchOrderRowsFromAPI(): Promise<PurchaseOrderRow[]> {
   }
 
   const endpoint = session.role === "customer"
-    ? "/api/monolith/purchaseOrders/my-orders"
-    : "/api/monolith/purchaseOrders/tenant-orders";
+    ? "/api/order/purchaseOrders/my-orders"
+    : "/api/order/purchaseOrders/tenant-orders";
 
   try {
-    const res = await fetch(endpoint, {
-      credentials: "include",
-      cache: "no-store",
-    });
+    const res = await api.get<unknown[]>(endpoint);
 
-    if (!res.ok) return [];
-
-    const rows = (await res.json().catch(() => [])) as unknown[];
+    const rows = res.data;
     if (!Array.isArray(rows)) return [];
 
     return rows.map(toPurchaseOrderRow).filter((row): row is PurchaseOrderRow => Boolean(row));
@@ -118,14 +114,9 @@ async function fetchOrderRowsFromAPI(): Promise<PurchaseOrderRow[]> {
 
 async function fetchOrderItemsFromAPI(orderId: number): Promise<PoLineItemRow[]> {
   try {
-    const res = await fetch(`/api/monolith/lineItems/order/${orderId}`, {
-      credentials: "include",
-      cache: "no-store",
-    });
+    const res = await api.get<unknown[]>(`/api/order/lineItems/order/${orderId}`);
 
-    if (!res.ok) return [];
-
-    const rows = (await res.json().catch(() => [])) as unknown[];
+    const rows = res.data;
     if (!Array.isArray(rows)) return [];
 
     return rows.map(toLineItemRow).filter((row): row is PoLineItemRow => Boolean(row));
@@ -186,20 +177,9 @@ export async function createPurchaseOrderOnAPI(
   payload: CreatePurchaseOrderPayload,
 ): Promise<PurchaseOrderRow | null> {
   try {
-    const res = await fetch("/api/monolith/purchaseOrders", {
-      method: "POST",
-      credentials: "include",
-      cache: "no-store",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    });
+    const res = await api.post<unknown>("/api/order/purchaseOrders", payload);
 
-    if (!res.ok) return null;
-
-    const row = (await res.json().catch(() => null)) as unknown;
-    return toPurchaseOrderRow(row);
+    return toPurchaseOrderRow(res.data);
   } catch {
     return null;
   }
@@ -209,20 +189,9 @@ export async function createLineItemOnAPI(
   payload: CreateLineItemPayload,
 ): Promise<PoLineItemRow | null> {
   try {
-    const res = await fetch("/api/monolith/lineItems", {
-      method: "POST",
-      credentials: "include",
-      cache: "no-store",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    });
+    const res = await api.post<unknown>("/api/order/lineItems", payload);
 
-    if (!res.ok) return null;
-
-    const row = (await res.json().catch(() => null)) as unknown;
-    return toLineItemRow(row);
+    return toLineItemRow(res.data);
   } catch {
     return null;
   }
@@ -232,22 +201,12 @@ export async function updatePurchaseOrderStatusOnAPI(
   poId: number,
   status: string,
 ): Promise<PurchaseOrderRow | null> {
-  const res = await fetch(`/api/monolith/purchaseOrders/${poId}/status`, {
-    method: "PUT",
-    credentials: "include",
-    cache: "no-store",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ status }),
-  });
-
-  if (!res.ok) {
-    const errorBody = (await res.json().catch(() => null)) as { error?: string; message?: string } | null;
-    const message = errorBody?.error ?? errorBody?.message ?? `Failed to update order status (${res.status})`;
+  try {
+    const res = await api.put<unknown>(`/api/order/purchaseOrders/${poId}/status`, { status });
+    return toPurchaseOrderRow(res.data);
+  } catch (err: any) {
+    const errorBody = err.response?.data;
+    const message = errorBody?.error ?? errorBody?.message ?? `Failed to update order status (${err.response?.status})`;
     throw new Error(message);
   }
-
-  const row = (await res.json().catch(() => null)) as unknown;
-  return toPurchaseOrderRow(row);
 }

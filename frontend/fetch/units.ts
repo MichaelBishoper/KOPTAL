@@ -1,4 +1,5 @@
 import type { UnitRow } from "@/structure/db";
+import api from "@/lib/axios";
 
 type Envelope = {
   data?: unknown;
@@ -21,14 +22,9 @@ function toUnitRow(raw: unknown): UnitRow | null {
 
 export async function fetchUnitsFromAPI(): Promise<UnitRow[]> {
   try {
-    const res = await fetch("/api/monolith/units", {
-      credentials: "include",
-      cache: "no-store",
-    });
+    const res = await api.get<Envelope>("/api/inventory/units");
 
-    if (!res.ok) return [];
-    const json = (await res.json()) as Envelope;
-    const rows = Array.isArray(json.data) ? json.data : [];
+    const rows = Array.isArray(res.data.data) ? res.data.data : [];
     return rows.map(toUnitRow).filter((row): row is UnitRow => Boolean(row));
   } catch {
     return [];

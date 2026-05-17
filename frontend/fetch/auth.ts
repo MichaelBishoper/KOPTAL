@@ -1,4 +1,5 @@
 import type { AppRole } from "@/lib/cookies/shared";
+import api from "@/lib/axios";
 
 export type AuthSession = {
   role: AppRole;
@@ -8,16 +9,8 @@ export type AuthSession = {
 
 export async function fetchAuthSessionFromAPI(): Promise<AuthSession> {
   try {
-    const res = await fetch("/api/auth/session", {
-      credentials: "include",
-      cache: "no-store",
-    });
-
-    if (!res.ok) {
-      return { role: "guest", userId: null, name: null };
-    }
-
-    return (await res.json()) as AuthSession;
+    const res = await api.get<AuthSession>("/api/auth/session");
+    return res.data;
   } catch {
     return { role: "guest", userId: null, name: null };
   }

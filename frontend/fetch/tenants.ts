@@ -1,4 +1,5 @@
 import type { TenantRow } from "@/structure/db";
+import api from "@/lib/axios";
 
 type PublicTenant = {
   tenant_id?: number;
@@ -36,19 +37,11 @@ function toTenantRow(raw: PublicTenant, index: number): TenantRow {
 
 export async function fetchTenantsFromAPI(): Promise<TenantRow[]> {
   try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3500);
-
-    const res = await fetch("/api/iam/public/tenants", {
-      credentials: "include",
-      cache: "no-store",
-      signal: controller.signal,
+    const res = await api.get<PublicTenant[]>("/api/iam/public/tenants", {
+      timeout: 3500,
     });
 
-    clearTimeout(timeoutId);
-
-    if (!res.ok) return [];
-    const rows = (await res.json().catch(() => [])) as PublicTenant[];
+    const rows = res.data;
     if (!Array.isArray(rows)) return [];
 
     return rows.map((row, index) => toTenantRow(row, index));

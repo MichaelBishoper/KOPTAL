@@ -1,4 +1,5 @@
 import type { CustomerRow } from "@/structure/db";
+import api from "@/lib/axios";
 
 type PublicCustomer = {
   customer_id?: number;
@@ -28,19 +29,11 @@ function toCustomerRow(raw: PublicCustomer, index: number): CustomerRow {
 
 export async function fetchCustomersFromAPI(): Promise<CustomerRow[]> {
   try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3500);
-
-    const res = await fetch("/api/iam/public/customers", {
-      credentials: "include",
-      cache: "no-store",
-      signal: controller.signal,
+    const res = await api.get<PublicCustomer[]>("/api/iam/public/customers", {
+      timeout: 3500,
     });
 
-    clearTimeout(timeoutId);
-
-    if (!res.ok) return [];
-    const rows = (await res.json().catch(() => [])) as PublicCustomer[];
+    const rows = res.data;
     if (!Array.isArray(rows)) return [];
 
     return rows.map((row, index) => toCustomerRow(row, index));

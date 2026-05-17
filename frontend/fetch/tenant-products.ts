@@ -1,14 +1,15 @@
 import type { TenantProductRow } from "@/structure/db";
+import api from "@/lib/axios";
 
 type ApiEnvelope<T> = {
   success?: boolean;
   data?: T;
 };
 
-const MONOLITH_BASE =
+const INVENTORY_BASE =
   typeof window === "undefined"
-    ? `${process.env.INVENTORY_URL ?? process.env.MONOLITH_URL ?? "http://127.0.0.1:4001"}/api`
-    : "/api/monolith";
+    ? `${process.env.INVENTORY_URL ?? "http://127.0.0.1:4001"}/api`
+    : "/api/inventory";
 
 function toProductRow(raw: unknown): TenantProductRow | null {
   if (!raw || typeof raw !== "object") return null;
@@ -44,14 +45,9 @@ function toProductRow(raw: unknown): TenantProductRow | null {
 
 export async function fetchTenantProductsFromAPI(): Promise<TenantProductRow[]> {
   try {
-    const res = await fetch(`${MONOLITH_BASE}/products`, {
-      credentials: "include",
-      cache: "no-store",
-    });
+    const res = await api.get<ApiEnvelope<unknown[]>>(`${INVENTORY_BASE}/products`);
 
-    if (!res.ok) return [];
-    const json = (await res.json()) as ApiEnvelope<unknown[]>;
-    const rows = Array.isArray(json.data) ? json.data : [];
+    const rows = Array.isArray(res.data.data) ? res.data.data : [];
     return rows.map(toProductRow).filter((row): row is TenantProductRow => Boolean(row));
   } catch {
     return [];
@@ -63,14 +59,9 @@ export async function fetchTenantProductByIdFromAPI(productId: number | string):
   if (!Number.isFinite(numericId)) return undefined;
 
   try {
-    const res = await fetch(`${MONOLITH_BASE}/products/${numericId}`, {
-      credentials: "include",
-      cache: "no-store",
-    });
+    const res = await api.get<ApiEnvelope<unknown>>(`${INVENTORY_BASE}/products/${numericId}`);
 
-    if (!res.ok) return undefined;
-    const json = (await res.json()) as ApiEnvelope<unknown>;
-    return toProductRow(json.data) ?? undefined;
+    return toProductRow(res.data.data) ?? undefined;
   } catch {
     return undefined;
   }
@@ -78,19 +69,9 @@ export async function fetchTenantProductByIdFromAPI(productId: number | string):
 
 export async function createTenantProductOnAPI(payload: Partial<TenantProductRow>): Promise<TenantProductRow | null> {
   try {
-    const res = await fetch(`${MONOLITH_BASE}/products`, {
-      method: "POST",
-      credentials: "include",
-      cache: "no-store",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    });
+    const res = await api.post<ApiEnvelope<unknown>>(`${INVENTORY_BASE}/products`, payload);
 
-    if (!res.ok) return null;
-    const json = (await res.json()) as ApiEnvelope<unknown>;
-    return toProductRow(json.data);
+    return toProductRow(res.data.data);
   } catch {
     return null;
   }
@@ -101,19 +82,9 @@ export async function updateTenantProductOnAPI(
   payload: Partial<TenantProductRow>,
 ): Promise<TenantProductRow | null> {
   try {
-    const res = await fetch(`${MONOLITH_BASE}/products/${productId}`, {
-      method: "PUT",
-      credentials: "include",
-      cache: "no-store",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    });
+    const res = await api.put<ApiEnvelope<unknown>>(`${INVENTORY_BASE}/products/${productId}`, payload);
 
-    if (!res.ok) return null;
-    const json = (await res.json()) as ApiEnvelope<unknown>;
-    return toProductRow(json.data);
+    return toProductRow(res.data.data);
   } catch {
     return null;
   }
@@ -121,12 +92,8 @@ export async function updateTenantProductOnAPI(
 
 export async function deleteTenantProductOnAPI(productId: number): Promise<boolean> {
   try {
-    const res = await fetch(`${MONOLITH_BASE}/products/${productId}`, {
-      method: "DELETE",
-      credentials: "include",
-      cache: "no-store",
-    });
-    return res.ok;
+    await api.delete(`${INVENTORY_BASE}/products/${productId}`);
+    return true;
   } catch {
     return false;
   }
